@@ -1,0 +1,2372 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}Add New Sample - HMPI System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="add-sample-hero">
+    <div class="hero-background">
+        <div class="animated-elements">
+            <div class="floating-molecule molecule-1"></div>
+            <div class="floating-molecule molecule-2"></div>
+            <div class="floating-molecule molecule-3"></div>
+            <div class="floating-molecule molecule-4"></div>
+        </div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-badge">
+                <i class="fas fa-plus-circle"></i>
+                <span>Add New Water Sample</span>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-main">Advanced Sample</span>
+                <span class="title-accent">Registration</span>
+            </h1>
+            <p class="hero-description">
+                Register new water quality samples with comprehensive heavy metal analysis, 
+                GPS coordinates, and automated HPI calculation for environmental monitoring.
+            </p>
+        </div>
+        <div class="hero-visual">
+            <div class="sample-preview-container">
+                <div class="sample-bottle">
+                    <div class="bottle-liquid" id="sampleLiquid"></div>
+                    <div class="bottle-cap"></div>
+                    <div class="bottle-label">
+                        <span id="sampleIdPreview">NEW</span>
+                    </div>
+                </div>
+                <div class="analysis-preview">
+                    <div class="metal-indicator" data-metal="lead">
+                        <span class="metal-symbol">Pb</span>
+                        <div class="indicator-light"></div>
+                    </div>
+                    <div class="metal-indicator" data-metal="mercury">
+                        <span class="metal-symbol">Hg</span>
+                        <div class="indicator-light"></div>
+                    </div>
+                    <div class="metal-indicator" data-metal="cadmium">
+                        <span class="metal-symbol">Cd</span>
+                        <div class="indicator-light"></div>
+                    </div>
+                    <div class="metal-indicator" data-metal="arsenic">
+                        <span class="metal-symbol">As</span>
+                        <div class="indicator-light"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Indicator -->
+<div class="form-progress-container">
+    <div class="progress-steps">
+        <div class="step active" data-step="1">
+            <div class="step-circle">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <span class="step-label">Location & Date</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="step" data-step="2">
+            <div class="step-circle">
+                <i class="fas fa-vial"></i>
+            </div>
+            <span class="step-label">Metal Analysis</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="step" data-step="3">
+            <div class="step-circle">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <span class="step-label">Review & Submit</span>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Form Container -->
+<div class="advanced-form-container">
+    <form method="post" class="sample-form" id="sampleForm">
+        {% csrf_token %}
+        
+        <!-- Step 1: Location & Date Information -->
+        <div class="form-step active" id="step-1">
+            <div class="step-header">
+                <h2><i class="fas fa-map-marker-alt"></i> Location & Date Information</h2>
+                <p>Specify the sampling location and collection details</p>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group featured">
+                    <label for="location" class="form-label">
+                        <i class="fas fa-map-pin"></i>
+                        Sample Location
+                        <span class="required">*</span>
+                    </label>
+                    <div class="input-container">
+                        <input type="text" id="location" name="location" class="form-input" 
+                               placeholder="e.g., Industrial Zone A, River Delta, etc." required>
+                        <div class="input-suggestions" id="locationSuggestions"></div>
+                    </div>
+                    <small class="input-help">Enter the specific location where the sample was collected</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date" class="form-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        Collection Date
+                        <span class="required">*</span>
+                    </label>
+                    <input type="date" id="date" name="date" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="time" class="form-label">
+                        <i class="fas fa-clock"></i>
+                        Collection Time
+                    </label>
+                    <input type="time" id="time" name="time" class="form-input">
+                </div>
+            </div>
+            
+            <!-- GPS Coordinates Section -->
+            <div class="coordinates-section">
+                <h3><i class="fas fa-globe"></i> GPS Coordinates</h3>
+                <div class="coordinates-grid">
+                    <div class="form-group">
+                        <label for="latitude" class="form-label">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Latitude
+                        </label>
+                        <input type="number" id="latitude" name="latitude" 
+                               class="form-input" step="0.000001" 
+                               placeholder="e.g., 40.712776">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="longitude" class="form-label">
+                            <i class="fas fa-map-marked-alt"></i>
+                            Longitude
+                        </label>
+                        <input type="number" id="longitude" name="longitude" 
+                               class="form-input" step="0.000001" 
+                               placeholder="e.g., -74.005974">
+                    </div>
+                    
+                    <div class="gps-actions">
+                        <button type="button" class="gps-btn" onclick="getCurrentLocation()">
+                            <i class="fas fa-crosshairs"></i>
+                            Auto-Detect
+                        </button>
+                        <button type="button" class="gps-btn" onclick="showMap()">
+                            <i class="fas fa-map"></i>
+                            Choose on Map
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Environmental Conditions -->
+            <div class="environmental-section">
+                <h3><i class="fas fa-cloud-sun"></i> Environmental Conditions (Optional)</h3>
+                <div class="environmental-grid">
+                    <div class="form-group">
+                        <label for="temperature" class="form-label">
+                            <i class="fas fa-thermometer-half"></i>
+                            Temperature (°C)
+                        </label>
+                        <input type="number" id="temperature" name="temperature" 
+                               class="form-input" step="0.1" placeholder="25.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="ph" class="form-label">
+                            <i class="fas fa-tint"></i>
+                            pH Level
+                        </label>
+                        <input type="number" id="ph" name="ph" 
+                               class="form-input" step="0.01" min="0" max="14" placeholder="7.0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="weather" class="form-label">
+                            <i class="fas fa-cloud"></i>
+                            Weather Conditions
+                        </label>
+                        <select id="weather" name="weather" class="form-select">
+                            <option value="">Select weather</option>
+                            <option value="sunny">Sunny</option>
+                            <option value="cloudy">Cloudy</option>
+                            <option value="rainy">Rainy</option>
+                            <option value="stormy">Stormy</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Heavy Metal Analysis -->
+        <div class="form-step" id="step-2">
+            <div class="step-header">
+                <h2><i class="fas fa-atom"></i> Heavy Metal Concentrations</h2>
+                <p>Enter the laboratory analysis results for heavy metal concentrations</p>
+            </div>
+            
+            <div class="metals-analysis-container">
+                <!-- Lead Analysis -->
+                <div class="metal-input-card" data-metal="lead">
+                    <div class="metal-header">
+                        <div class="metal-icon lead-icon">
+                            <span class="element-symbol">Pb</span>
+                        </div>
+                        <div class="metal-info">
+                            <h3>Lead (Pb)</h3>
+                            <p>WHO Limit: 0.01 mg/L</p>
+                        </div>
+                        <div class="safety-indicator" id="leadIndicator">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                    </div>
+                    <div class="metal-input-section">
+                        <div class="form-group">
+                            <label for="lead" class="form-label">
+                                Concentration (mg/L)
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-with-validation">
+                                <input type="number" id="lead" name="lead" 
+                                       class="form-input metal-input" 
+                                       step="0.001" min="0" placeholder="0.000" required
+                                       oninput="validateMetalInput('lead', this.value)">
+                                <div class="input-status" id="leadStatus"></div>
+                            </div>
+                        </div>
+                        <div class="metal-progress-bar">
+                            <div class="progress-fill" id="leadProgress"></div>
+                        </div>
+                        <div class="safety-message" id="leadMessage"></div>
+                    </div>
+                </div>
+                
+                <!-- Mercury Analysis -->
+                <div class="metal-input-card" data-metal="mercury">
+                    <div class="metal-header">
+                        <div class="metal-icon mercury-icon">
+                            <span class="element-symbol">Hg</span>
+                        </div>
+                        <div class="metal-info">
+                            <h3>Mercury (Hg)</h3>
+                            <p>WHO Limit: 0.006 mg/L</p>
+                        </div>
+                        <div class="safety-indicator" id="mercuryIndicator">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                    </div>
+                    <div class="metal-input-section">
+                        <div class="form-group">
+                            <label for="mercury" class="form-label">
+                                Concentration (mg/L)
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-with-validation">
+                                <input type="number" id="mercury" name="mercury" 
+                                       class="form-input metal-input" 
+                                       step="0.001" min="0" placeholder="0.000" required
+                                       oninput="validateMetalInput('mercury', this.value)">
+                                <div class="input-status" id="mercuryStatus"></div>
+                            </div>
+                        </div>
+                        <div class="metal-progress-bar">
+                            <div class="progress-fill" id="mercuryProgress"></div>
+                        </div>
+                        <div class="safety-message" id="mercuryMessage"></div>
+                    </div>
+                </div>
+                
+                <!-- Cadmium Analysis -->
+                <div class="metal-input-card" data-metal="cadmium">
+                    <div class="metal-header">
+                        <div class="metal-icon cadmium-icon">
+                            <span class="element-symbol">Cd</span>
+                        </div>
+                        <div class="metal-info">
+                            <h3>Cadmium (Cd)</h3>
+                            <p>WHO Limit: 0.003 mg/L</p>
+                        </div>
+                        <div class="safety-indicator" id="cadmiumIndicator">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                    </div>
+                    <div class="metal-input-section">
+                        <div class="form-group">
+                            <label for="cadmium" class="form-label">
+                                Concentration (mg/L)
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-with-validation">
+                                <input type="number" id="cadmium" name="cadmium" 
+                                       class="form-input metal-input" 
+                                       step="0.001" min="0" placeholder="0.000" required
+                                       oninput="validateMetalInput('cadmium', this.value)">
+                                <div class="input-status" id="cadmiumStatus"></div>
+                            </div>
+                        </div>
+                        <div class="metal-progress-bar">
+                            <div class="progress-fill" id="cadmiumProgress"></div>
+                        </div>
+                        <div class="safety-message" id="cadmiumMessage"></div>
+                    </div>
+                </div>
+                
+                <!-- Arsenic Analysis -->
+                <div class="metal-input-card" data-metal="arsenic">
+                    <div class="metal-header">
+                        <div class="metal-icon arsenic-icon">
+                            <span class="element-symbol">As</span>
+                        </div>
+                        <div class="metal-info">
+                            <h3>Arsenic (As)</h3>
+                            <p>WHO Limit: 0.01 mg/L</p>
+                        </div>
+                        <div class="safety-indicator" id="arsenicIndicator">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                    </div>
+                    <div class="metal-input-section">
+                        <div class="form-group">
+                            <label for="arsenic" class="form-label">
+                                Concentration (mg/L)
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-with-validation">
+                                <input type="number" id="arsenic" name="arsenic" 
+                                       class="form-input metal-input" 
+                                       step="0.001" min="0" placeholder="0.000" required
+                                       oninput="validateMetalInput('arsenic', this.value)">
+                                <div class="input-status" id="arsenicStatus"></div>
+                            </div>
+                        </div>
+                        <div class="metal-progress-bar">
+                            <div class="progress-fill" id="arsenicProgress"></div>
+                        </div>
+                        <div class="safety-message" id="arsenicMessage"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Real-time HPI Calculator -->
+            <div class="hpi-calculator">
+                <h3><i class="fas fa-calculator"></i> Real-time HPI Calculation</h3>
+                <div class="hpi-display">
+                    <div class="hpi-gauge-mini">
+                        <div class="gauge-track">
+                            <div class="gauge-fill" id="hpiGaugeFill"></div>
+                        </div>
+                        <div class="hpi-value" id="hpiValue">0.0</div>
+                    </div>
+                    <div class="hpi-status" id="hpiStatus">
+                        <span class="status-text">Enter metal concentrations</span>
+                        <div class="status-indicator"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 3: Review & Submit -->
+        <div class="form-step" id="step-3">
+            <div class="step-header">
+                <h2><i class="fas fa-clipboard-check"></i> Review & Submit</h2>
+                <p>Review all entered information before submitting the sample</p>
+            </div>
+            
+            <div class="review-container">
+                <div class="review-section">
+                    <h3><i class="fas fa-map-marker-alt"></i> Location & Date</h3>
+                    <div class="review-grid">
+                        <div class="review-item">
+                            <span class="review-label">Location:</span>
+                            <span class="review-value" id="reviewLocation">-</span>
+                        </div>
+                        <div class="review-item">
+                            <span class="review-label">Date:</span>
+                            <span class="review-value" id="reviewDate">-</span>
+                        </div>
+                        <div class="review-item">
+                            <span class="review-label">Coordinates:</span>
+                            <span class="review-value" id="reviewCoordinates">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="review-section">
+                    <h3><i class="fas fa-atom"></i> Heavy Metal Analysis</h3>
+                    <div class="metals-review">
+                        <div class="metal-review-item">
+                            <div class="metal-review-header">
+                                <span class="metal-symbol">Pb</span>
+                                <span class="metal-name">Lead</span>
+                            </div>
+                            <div class="metal-review-value" id="reviewLead">0.000 mg/L</div>
+                            <div class="metal-review-status" id="reviewLeadStatus">Safe</div>
+                        </div>
+                        <div class="metal-review-item">
+                            <div class="metal-review-header">
+                                <span class="metal-symbol">Hg</span>
+                                <span class="metal-name">Mercury</span>
+                            </div>
+                            <div class="metal-review-value" id="reviewMercury">0.000 mg/L</div>
+                            <div class="metal-review-status" id="reviewMercuryStatus">Safe</div>
+                        </div>
+                        <div class="metal-review-item">
+                            <div class="metal-review-header">
+                                <span class="metal-symbol">Cd</span>
+                                <span class="metal-name">Cadmium</span>
+                            </div>
+                            <div class="metal-review-value" id="reviewCadmium">0.000 mg/L</div>
+                            <div class="metal-review-status" id="reviewCadmiumStatus">Safe</div>
+                        </div>
+                        <div class="metal-review-item">
+                            <div class="metal-review-header">
+                                <span class="metal-symbol">As</span>
+                                <span class="metal-name">Arsenic</span>
+                            </div>
+                            <div class="metal-review-value" id="reviewArsenic">0.000 mg/L</div>
+                            <div class="metal-review-status" id="reviewArsenicStatus">Safe</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="review-section featured">
+                    <h3><i class="fas fa-shield-alt"></i> Final Assessment</h3>
+                    <div class="final-assessment">
+                        <div class="assessment-hpi">
+                            <span class="assessment-label">HPI Score:</span>
+                            <span class="assessment-value" id="finalHPI">0.0</span>
+                        </div>
+                        <div class="assessment-risk">
+                            <span class="assessment-label">Risk Level:</span>
+                            <span class="assessment-value" id="finalRisk">Safe</span>
+                        </div>
+                        <div class="assessment-recommendation" id="finalRecommendation">
+                            Sample appears to be within safe limits for all tested heavy metals.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Notes -->
+            <div class="notes-section">
+                <div class="form-group">
+                    <label for="notes" class="form-label">
+                        <i class="fas fa-sticky-note"></i>
+                        Additional Notes (Optional)
+                    </label>
+                    <textarea id="notes" name="notes" class="form-textarea" rows="4" 
+                              placeholder="Add any additional observations, collection method details, or other relevant information..."></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Navigation -->
+        <div class="form-navigation">
+            <button type="button" class="nav-btn prev-btn" onclick="previousStep()" style="display: none;">
+                <i class="fas fa-arrow-left"></i>
+                Previous
+            </button>
+            <button type="button" class="nav-btn next-btn" onclick="nextStep()">
+                Next
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <button type="submit" class="nav-btn submit-btn" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                Submit Sample
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Location Map Modal -->
+<div class="map-modal" id="mapModal" style="display: none;">
+    <div class="map-modal-content">
+        <div class="map-modal-header">
+            <h3><i class="fas fa-map"></i> Select Sample Location</h3>
+            <button class="close-modal" onclick="closeMap()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="map-container" id="locationMap">
+            <!-- Interactive map will be loaded here -->
+        </div>
+        <div class="map-modal-footer">
+            <button class="map-btn secondary" onclick="closeMap()">Cancel</button>
+            <button class="map-btn primary" onclick="confirmLocation()">Confirm Location</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhanced Form Styles */
+:root {
+    --form-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --form-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --form-warning: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    --form-danger: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    --form-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    
+    --lead-color: #ff6b6b;
+    --mercury-color: #4ecdc4;
+    --cadmium-color: #45b7d1;
+    --arsenic-color: #96ceb4;
+}
+
+/* Hero Section */
+.add-sample-hero {
+    position: relative;
+    background: var(--form-primary);
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    color: white;
+    overflow: hidden;
+    min-height: 500px;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.animated-elements {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.floating-molecule {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float-molecule 6s ease-in-out infinite;
+}
+
+.molecule-1 {
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.molecule-2 {
+    top: 60%;
+    left: 80%;
+    animation-delay: 2s;
+}
+
+.molecule-3 {
+    top: 10%;
+    left: 70%;
+    animation-delay: 4s;
+}
+
+.molecule-4 {
+    top: 80%;
+    left: 20%;
+    animation-delay: 1s;
+}
+
+@keyframes float-molecule {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-20px) rotate(180deg);
+        opacity: 0.7;
+    }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3rem;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.875rem;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+}
+
+.title-main {
+    display: block;
+    background: linear-gradient(45deg, #fff, #e3f2fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.title-accent {
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.hero-description {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    opacity: 0.9;
+    max-width: 600px;
+}
+
+/* Sample Preview */
+.sample-preview-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.sample-bottle {
+    position: relative;
+    width: 100px;
+    height: 200px;
+    border-radius: 20px 20px 10px 10px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+}
+
+.bottle-liquid {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    background: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+    transition: all 0.5s ease;
+    border-radius: 0 0 8px 8px;
+}
+
+.bottle-cap {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+}
+
+.bottle-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #1f2937;
+    padding: 0.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.analysis-preview {
+    display: flex;
+    gap: 1rem;
+}
+
+.metal-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.metal-symbol {
+    font-weight: 900;
+    font-size: 1.25rem;
+    color: white;
+}
+
+.indicator-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #6b7280;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(107, 114, 128, 0.5);
+}
+
+.indicator-light.safe {
+    background: #22c55e;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.8);
+}
+
+.indicator-light.danger {
+    background: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+}
+
+/* Progress Steps */
+.form-progress-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    margin-bottom: 3rem;
+}
+
+.progress-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+.step-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+    border: 3px solid #e5e7eb;
+}
+
+.step.active .step-circle {
+    background: var(--form-primary);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+}
+
+.step.completed .step-circle {
+    background: var(--form-success);
+    color: white;
+    border-color: transparent;
+}
+
+.step-label {
+    font-weight: 600;
+    color: #6b7280;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.step.active .step-label {
+    color: #1f2937;
+    font-weight: 700;
+}
+
+.progress-line {
+    width: 100px;
+    height: 3px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-line::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: var(--form-primary);
+    transition: width 0.5s ease;
+}
+
+.progress-line.completed::after {
+    width: 100%;
+}
+
+/* Advanced Form Container */
+.advanced-form-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    margin-bottom: 3rem;
+}
+
+.form-step {
+    display: none;
+}
+
+.form-step.active {
+    display: block;
+    animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.step-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.step-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.step-header p {
+    font-size: 1.125rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+/* Form Elements */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.form-group.featured {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.required {
+    color: #ef4444;
+    font-weight: 900;
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+    padding: 1rem 1.25rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    border-color: var(--form-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.input-container {
+    position: relative;
+}
+
+.input-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 10;
+    display: none;
+}
+
+.input-help {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* Coordinates Section */
+.coordinates-section {
+    background: #f8fafc;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.coordinates-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.coordinates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.gps-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.gps-btn {
+    background: var(--form-primary);
+    color: white;
+    border: none;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.gps-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+/* Environmental Section */
+.environmental-section {
+    background: #f0fdf4;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.environmental-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.environmental-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Metal Input Cards */
+.metals-analysis-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.metal-input-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metal-input-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--lead-color);
+    transition: all 0.3s ease;
+}
+
+.metal-input-card[data-metal="mercury"]::before {
+    background: var(--mercury-color);
+}
+
+.metal-input-card[data-metal="cadmium"]::before {
+    background: var(--cadmium-color);
+}
+
+.metal-input-card[data-metal="arsenic"]::before {
+    background: var(--arsenic-color);
+}
+
+.metal-input-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.metal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.metal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    color: white;
+    background: var(--lead-color);
+}
+
+.mercury-icon {
+    background: var(--mercury-color);
+}
+
+.cadmium-icon {
+    background: var(--cadmium-color);
+}
+
+.arsenic-icon {
+    background: var(--arsenic-color);
+}
+
+.element-symbol {
+    font-size: 1.5rem;
+}
+
+.metal-info h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.25rem 0;
+}
+
+.metal-info p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.safety-indicator {
+    margin-left: auto;
+    font-size: 1.5rem;
+    color: #d1d5db;
+    transition: all 0.3s ease;
+}
+
+.safety-indicator.safe {
+    color: #22c55e;
+}
+
+.safety-indicator.danger {
+    color: #ef4444;
+}
+
+.input-with-validation {
+    position: relative;
+}
+
+.input-status {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.25rem;
+    transition: all 0.3s ease;
+}
+
+.metal-progress-bar {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 4px;
+    transition: all 0.5s ease;
+    background: var(--lead-color);
+}
+
+.metal-input-card[data-metal="mercury"] .progress-fill {
+    background: var(--mercury-color);
+}
+
+.metal-input-card[data-metal="cadmium"] .progress-fill {
+    background: var(--cadmium-color);
+}
+
+.metal-input-card[data-metal="arsenic"] .progress-fill {
+    background: var(--arsenic-color);
+}
+
+.safety-message {
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.safety-message.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.safety-message.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.safety-message.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* HPI Calculator */
+.hpi-calculator {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.hpi-calculator h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.hpi-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.hpi-gauge-mini {
+    position: relative;
+}
+
+.gauge-track {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 180deg,
+        #22c55e 0deg 90deg,
+        #f59e0b 90deg 180deg,
+        #ef4444 180deg 270deg,
+        #dc2626 270deg 360deg
+    );
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gauge-fill {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.hpi-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #1f2937;
+}
+
+.hpi-status {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.status-text {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.status-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #d1d5db;
+    transition: all 0.3s ease;
+}
+
+.status-indicator.safe {
+    background: #22c55e;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+}
+
+.status-indicator.warning {
+    background: #f59e0b;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+}
+
+.status-indicator.danger {
+    background: #ef4444;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+/* Review Section */
+.review-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.review-section {
+    background: #f8fafc;
+    padding: 2rem;
+    border-radius: 16px;
+}
+
+.review-section.featured {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+}
+
+.review-section h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.review-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.review-label {
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.review-value {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.metals-review {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.metal-review-item {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.metal-review-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.metal-review-header .metal-symbol {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--lead-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1rem;
+}
+
+.metal-review-header .metal-name {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 1.125rem;
+}
+
+.metal-review-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.metal-review-status {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.metal-review-status.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+.metal-review-status.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+.final-assessment {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+}
+
+.assessment-hpi,
+.assessment-risk {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.assessment-label {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 1.125rem;
+}
+
+.assessment-value {
+    font-weight: 900;
+    color: #1f2937;
+    font-size: 1.5rem;
+}
+
+.assessment-recommendation {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #374151;
+    font-style: italic;
+}
+
+/* Notes Section */
+.notes-section {
+    background: #fefce8;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+}
+
+.form-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Form Navigation */
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 0;
+    border-top: 2px solid #f3f4f6;
+}
+
+.nav-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.prev-btn {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.prev-btn:hover {
+    background: #e5e7eb;
+    color: #374151;
+    transform: translateY(-2px);
+}
+
+.next-btn {
+    background: var(--form-primary);
+    color: white;
+    margin-left: auto;
+}
+
+.next-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.submit-btn {
+    background: var(--form-success);
+    color: white;
+    margin-left: auto;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(17, 153, 142, 0.3);
+}
+
+/* Map Modal */
+.map-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-modal-content {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.map-modal-header {
+    background: var(--form-primary);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.map-modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.close-modal {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.close-modal:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.map-container {
+    flex: 1;
+    min-height: 400px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+}
+
+.map-modal-footer {
+    padding: 1.5rem 2rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.map-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.map-btn.secondary {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.map-btn.secondary:hover {
+    background: #e5e7eb;
+}
+
+.map-btn.primary {
+    background: var(--form-primary);
+    color: white;
+}
+
+.map-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .metals-analysis-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .add-sample-hero {
+        padding: 3rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .advanced-form-container {
+        padding: 2rem 1rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .coordinates-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .environmental-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hpi-display {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .review-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metals-review {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-navigation {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nav-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .progress-steps {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .progress-line {
+        width: 3px;
+        height: 50px;
+        transform: rotate(90deg);
+    }
+    
+    .metal-input-card {
+        padding: 1.5rem;
+    }
+    
+    .map-modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+}
+</style>
+
+<script>
+// Enhanced Form JavaScript
+let currentStep = 1;
+let totalSteps = 3;
+let metalLimits = {
+    lead: 0.01,
+    mercury: 0.006,
+    cadmium: 0.003,
+    arsenic: 0.01
+};
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', function() {
+    initializeForm();
+    setupLocationSuggestions();
+    updateFormProgress();
+});
+
+function initializeForm() {
+    // Set default date to today
+    const today = new Date();
+    document.getElementById('date').value = today.toISOString().split('T')[0];
+    
+    // Set default time to current time
+    const timeStr = today.toTimeString().slice(0, 5);
+    document.getElementById('time').value = timeStr;
+    
+    // Initialize metal indicators
+    updateSamplePreview();
+}
+
+// Step Navigation
+function nextStep() {
+    if (currentStep < totalSteps) {
+        if (validateCurrentStep()) {
+            // Hide current step
+            document.getElementById(`step-${currentStep}`).classList.remove('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.add('completed');
+            
+            // Show next step
+            currentStep++;
+            document.getElementById(`step-${currentStep}`).classList.add('active');
+            document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+            
+            updateFormProgress();
+            updateNavigationButtons();
+            
+            if (currentStep === 3) {
+                populateReviewSection();
+            }
+            
+            // Smooth scroll to top
+            document.querySelector('.advanced-form-container').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    }
+}
+
+function previousStep() {
+    if (currentStep > 1) {
+        // Hide current step
+        document.getElementById(`step-${currentStep}`).classList.remove('active');
+        document.querySelector(`[data-step="${currentStep}"]`).classList.remove('active');
+        
+        // Show previous step
+        currentStep--;
+        document.getElementById(`step-${currentStep}`).classList.add('active');
+        document.querySelector(`[data-step="${currentStep}"]`).classList.add('active');
+        document.querySelector(`[data-step="${currentStep}"]`).classList.remove('completed');
+        
+        updateFormProgress();
+        updateNavigationButtons();
+        
+        // Smooth scroll to top
+        document.querySelector('.advanced-form-container').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    }
+}
+
+function updateFormProgress() {
+    // Update progress lines
+    document.querySelectorAll('.progress-line').forEach((line, index) => {
+        if (index < currentStep - 1) {
+            line.classList.add('completed');
+        } else {
+            line.classList.remove('completed');
+        }
+    });
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.querySelector('.prev-btn');
+    const nextBtn = document.querySelector('.next-btn');
+    const submitBtn = document.querySelector('.submit-btn');
+    
+    // Previous button
+    if (currentStep === 1) {
+        prevBtn.style.display = 'none';
+    } else {
+        prevBtn.style.display = 'flex';
+    }
+    
+    // Next/Submit buttons
+    if (currentStep === totalSteps) {
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'flex';
+    } else {
+        nextBtn.style.display = 'flex';
+        submitBtn.style.display = 'none';
+    }
+}
+
+function validateCurrentStep() {
+    switch (currentStep) {
+        case 1:
+            return validateStep1();
+        case 2:
+            return validateStep2();
+        case 3:
+            return true; // Review step doesn't need validation
+        default:
+            return false;
+    }
+}
+
+function validateStep1() {
+    const location = document.getElementById('location').value.trim();
+    const date = document.getElementById('date').value;
+    
+    if (!location) {
+        showNotification('Please enter a sample location.', 'error');
+        document.getElementById('location').focus();
+        return false;
+    }
+    
+    if (!date) {
+        showNotification('Please select a collection date.', 'error');
+        document.getElementById('date').focus();
+        return false;
+    }
+    
+    const selectedDate = new Date(date);
+    const today = new Date();
+    if (selectedDate > today) {
+        showNotification('Collection date cannot be in the future.', 'error');
+        document.getElementById('date').focus();
+        return false;
+    }
+    
+    return true;
+}
+
+function validateStep2() {
+    const metals = ['lead', 'mercury', 'cadmium', 'arsenic'];
+    
+    for (let metal of metals) {
+        const value = parseFloat(document.getElementById(metal).value);
+        
+        if (!document.getElementById(metal).value) {
+            showNotification(`Please enter ${metal} concentration.`, 'error');
+            document.getElementById(metal).focus();
+            return false;
+        }
+        
+        if (isNaN(value) || value < 0) {
+            showNotification(`Please enter a valid ${metal} concentration.`, 'error');
+            document.getElementById(metal).focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+// Metal Input Validation
+function validateMetalInput(metal, value) {
+    const numValue = parseFloat(value);
+    const limit = metalLimits[metal];
+    
+    // Update safety indicator
+    const indicator = document.getElementById(`${metal}Indicator`);
+    const status = document.getElementById(`${metal}Status`);
+    const progress = document.getElementById(`${metal}Progress`);
+    const message = document.getElementById(`${metal}Message`);
+    
+    if (value && !isNaN(numValue)) {
+        // Update progress bar
+        const percentage = Math.min((numValue / (limit * 2)) * 100, 100);
+        progress.style.width = `${percentage}%`;
+        
+        // Update safety status
+        if (numValue <= limit) {
+            indicator.innerHTML = '<i class="fas fa-check-circle"></i>';
+            indicator.className = 'safety-indicator safe';
+            status.innerHTML = '<i class="fas fa-check-circle" style="color: #22c55e;"></i>';
+            message.textContent = 'Within safe limits';
+            message.className = 'safety-message safe';
+        } else if (numValue <= limit * 2) {
+            indicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            indicator.className = 'safety-indicator danger';
+            status.innerHTML = '<i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>';
+            message.textContent = 'Above recommended limit';
+            message.className = 'safety-message warning';
+        } else {
+            indicator.innerHTML = '<i class="fas fa-times-circle"></i>';
+            indicator.className = 'safety-indicator danger';
+            status.innerHTML = '<i class="fas fa-times-circle" style="color: #ef4444;"></i>';
+            message.textContent = 'Significantly above safe limit';
+            message.className = 'safety-message danger';
+        }
+        
+        // Update hero preview
+        updateMetalIndicator(metal, numValue > limit);
+    } else {
+        // Reset indicators
+        indicator.innerHTML = '<i class="fas fa-circle"></i>';
+        indicator.className = 'safety-indicator';
+        status.innerHTML = '';
+        progress.style.width = '0%';
+        message.textContent = '';
+        message.className = 'safety-message';
+        
+        updateMetalIndicator(metal, false);
+    }
+    
+    // Update HPI calculation
+    calculateHPI();
+}
+
+function updateMetalIndicator(metal, isDanger) {
+    const indicator = document.querySelector(`[data-metal="${metal}"] .indicator-light`);
+    if (indicator) {
+        if (isDanger) {
+            indicator.className = 'indicator-light danger';
+        } else {
+            indicator.className = 'indicator-light safe';
+        }
+    }
+}
+
+function calculateHPI() {
+    const metals = ['lead', 'mercury', 'cadmium', 'arsenic'];
+    let totalScore = 0;
+    let validInputs = 0;
+    
+    metals.forEach(metal => {
+        const value = parseFloat(document.getElementById(metal).value);
+        if (!isNaN(value)) {
+            const limit = metalLimits[metal];
+            const score = (value / limit) * 100;
+            totalScore += score;
+            validInputs++;
+        }
+    });
+    
+    if (validInputs > 0) {
+        const hpi = totalScore / validInputs;
+        updateHPIDisplay(hpi);
+    } else {
+        updateHPIDisplay(0);
+    }
+}
+
+function updateHPIDisplay(hpi) {
+    const hpiValue = document.getElementById('hpiValue');
+    const hpiStatus = document.getElementById('hpiStatus');
+    const statusIndicator = document.querySelector('.status-indicator');
+    const statusText = document.querySelector('.status-text');
+    const gaugeFill = document.getElementById('hpiGaugeFill');
+    
+    hpiValue.textContent = hpi.toFixed(1);
+    
+    // Update gauge fill (normalize to 0-100% for display)
+    const gaugePercentage = Math.min(hpi / 2, 100); // Max at HPI 200
+    if (gaugeFill) {
+        gaugeFill.style.width = `${gaugePercentage}%`;
+    }
+    
+    // Update status
+    if (hpi <= 50) {
+        statusText.textContent = 'Safe Level';
+        statusIndicator.className = 'status-indicator safe';
+        updateSampleLiquid('safe');
+    } else if (hpi <= 100) {
+        statusText.textContent = 'Moderate Risk';
+        statusIndicator.className = 'status-indicator warning';
+        updateSampleLiquid('warning');
+    } else {
+        statusText.textContent = 'High Risk';
+        statusIndicator.className = 'status-indicator danger';
+        updateSampleLiquid('danger');
+    }
+}
+
+function updateSampleLiquid(status) {
+    const liquid = document.getElementById('sampleLiquid');
+    if (liquid) {
+        switch (status) {
+            case 'safe':
+                liquid.style.background = 'linear-gradient(180deg, #4facfe 0%, #00f2fe 100%)';
+                break;
+            case 'warning':
+                liquid.style.background = 'linear-gradient(180deg, #f7971e 0%, #ffd200 100%)';
+                break;
+            case 'danger':
+                liquid.style.background = 'linear-gradient(180deg, #ff416c 0%, #ff4b2b 100%)';
+                break;
+        }
+    }
+}
+
+function updateSamplePreview() {
+    // Update sample ID preview
+    const preview = document.getElementById('sampleIdPreview');
+    if (preview) {
+        const today = new Date();
+        const sampleId = `S${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}-NEW`;
+        preview.textContent = sampleId;
+    }
+}
+
+// GPS Functions
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        showNotification('Getting your current location...', 'info');
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                document.getElementById('latitude').value = lat.toFixed(6);
+                document.getElementById('longitude').value = lng.toFixed(6);
+                
+                showNotification('Location detected successfully!', 'success');
+            },
+            function(error) {
+                let message = 'Unable to get your location. ';
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        message += 'Location access denied.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message += 'Location information unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        message += 'Location request timed out.';
+                        break;
+                }
+                showNotification(message, 'error');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        showNotification('Geolocation is not supported by your browser.', 'error');
+    }
+}
+
+function showMap() {
+    document.getElementById('mapModal').style.display = 'flex';
+    // Initialize map here (would integrate with mapping library)
+    initializeLocationMap();
+}
+
+function closeMap() {
+    document.getElementById('mapModal').style.display = 'none';
+}
+
+function confirmLocation() {
+    // Get selected coordinates from map and update inputs
+    // This would be implemented with the mapping library
+    showNotification('Location selected from map!', 'success');
+    closeMap();
+}
+
+function initializeLocationMap() {
+    // This would initialize an interactive map
+    // For now, show a placeholder
+    const mapContainer = document.getElementById('locationMap');
+    mapContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #6b7280;">
+            <i class="fas fa-map-marked-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <h3>Interactive Map</h3>
+            <p>Click on the map to select a location</p>
+            <small>Map integration would be implemented here</small>
+        </div>
+    `;
+}
+
+// Location Suggestions
+function setupLocationSuggestions() {
+    const locationInput = document.getElementById('location');
+    const suggestions = document.getElementById('locationSuggestions');
+    
+    // Sample suggestions - in real app, these would come from database
+    const commonLocations = [
+        'Industrial Zone A',
+        'River Delta Area',
+        'Downtown Water Supply',
+        'Manufacturing District',
+        'Agricultural Zone B',
+        'Residential Area North',
+        'Port Authority Dock',
+        'Water Treatment Plant'
+    ];
+    
+    locationInput.addEventListener('input', function() {
+        const value = this.value.toLowerCase();
+        if (value.length > 2) {
+            const matches = commonLocations.filter(location => 
+                location.toLowerCase().includes(value)
+            );
+            
+            if (matches.length > 0) {
+                suggestions.innerHTML = matches.map(location => 
+                    `<div class="suggestion-item" onclick="selectLocation('${location}')">${location}</div>`
+                ).join('');
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        } else {
+            suggestions.style.display = 'none';
+        }
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.input-container')) {
+            suggestions.style.display = 'none';
+        }
+    });
+}
+
+function selectLocation(location) {
+    document.getElementById('location').value = location;
+    document.getElementById('locationSuggestions').style.display = 'none';
+}
+
+// Review Section Population
+function populateReviewSection() {
+    // Location & Date
+    document.getElementById('reviewLocation').textContent = document.getElementById('location').value || '-';
+    document.getElementById('reviewDate').textContent = document.getElementById('date').value || '-';
+    
+    const lat = document.getElementById('latitude').value;
+    const lng = document.getElementById('longitude').value;
+    if (lat && lng) {
+        document.getElementById('reviewCoordinates').textContent = `${parseFloat(lat).toFixed(3)}, ${parseFloat(lng).toFixed(3)}`;
+    } else {
+        document.getElementById('reviewCoordinates').textContent = 'Not provided';
+    }
+    
+    // Metal concentrations
+    const metals = ['lead', 'mercury', 'cadmium', 'arsenic'];
+    metals.forEach(metal => {
+        const value = parseFloat(document.getElementById(metal).value) || 0;
+        const limit = metalLimits[metal];
+        
+        document.getElementById(`review${metal.charAt(0).toUpperCase() + metal.slice(1)}`).textContent = `${value.toFixed(3)} mg/L`;
+        
+        const statusElement = document.getElementById(`review${metal.charAt(0).toUpperCase() + metal.slice(1)}Status`);
+        if (value <= limit) {
+            statusElement.textContent = 'Safe';
+            statusElement.className = 'metal-review-status safe';
+        } else {
+            statusElement.textContent = 'Above Limit';
+            statusElement.className = 'metal-review-status danger';
+        }
+    });
+    
+    // Final assessment
+    const hpiValue = parseFloat(document.getElementById('hpiValue').textContent) || 0;
+    document.getElementById('finalHPI').textContent = hpiValue.toFixed(1);
+    
+    let riskLevel, recommendation;
+    if (hpiValue <= 50) {
+        riskLevel = 'Safe';
+        recommendation = 'Sample appears to be within safe limits for all tested heavy metals. Water quality is acceptable for intended use.';
+    } else if (hpiValue <= 100) {
+        riskLevel = 'Moderate Risk';
+        recommendation = 'Some heavy metals are above recommended limits. Consider additional treatment or monitoring before use.';
+    } else {
+        riskLevel = 'High Risk';
+        recommendation = 'Multiple heavy metals exceed safe limits significantly. Immediate action required - water is not safe for consumption.';
+    }
+    
+    document.getElementById('finalRisk').textContent = riskLevel;
+    document.getElementById('finalRecommendation').textContent = recommendation;
+}
+
+// Form Submission
+document.getElementById('sampleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    showNotification('Submitting sample data...', 'info');
+    
+    // Simulate form submission
+    setTimeout(() => {
+        showNotification('Sample submitted successfully!', 'success');
+        
+        // Show success message and redirect
+        setTimeout(() => {
+            window.location.href = '/samples/';
+        }, 2000);
+    }, 2000);
+});
+
+// Utility Functions
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${getNotificationIcon(type)}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+    
+    // Style the notification
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 10001;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        max-width: 400px;
+        border-left: 4px solid ${getNotificationColor(type)};
+        animation: slideIn 0.3s ease-out;
+    `;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    return icons[type] || icons.info;
+}
+
+function getNotificationColor(type) {
+    const colors = {
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+    };
+    return colors[type] || colors.info;
+}
+
+// Add notification styles
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    
+    .notification-close:hover {
+        background: #f3f4f6;
+        color: #1f2937;
+    }
+    
+    .suggestion-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        font-weight: 500;
+        color: #374151;
+    }
+    
+    .suggestion-item:hover {
+        background: #f3f4f6;
+    }
+    
+    .suggestion-item:last-child {
+        border-radius: 0 0 12px 12px;
+    }
+`;
+document.head.appendChild(notificationStyles);
+</script>
+{% endblock %}

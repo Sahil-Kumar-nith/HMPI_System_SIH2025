@@ -1,0 +1,530 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}Upload CSV - HMPI System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Upload CSV Data</h1>
+    <p class="page-subtitle">Import multiple water quality samples from a CSV file</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem; align-items: start;">
+    <!-- Main Upload Form -->
+    <div class="card">
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
+            {% csrf_token %}
+            
+            <div class="upload-section">
+                <div class="upload-header">
+                    <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: #667eea; margin-bottom: 1rem;"></i>
+                    <h3>Select CSV File</h3>
+                    <p>Choose a CSV file containing your water quality sample data</p>
+                </div>
+                
+                <div class="file-upload-wrapper">
+                    <input type="file" name="csv_file" id="csvFile" accept=".csv" required class="file-input">
+                    <label for="csvFile" class="file-label">
+                        <i class="fas fa-upload"></i>
+                        <span class="file-text">Click to browse or drag and drop your CSV file</span>
+                        <span class="file-info">Maximum file size: 10MB</span>
+                    </label>
+                </div>
+                
+                <div class="file-preview" id="filePreview" style="display: none;">
+                    <div class="preview-header">
+                        <i class="fas fa-file-csv"></i>
+                        <span class="file-name"></span>
+                        <span class="file-size"></span>
+                        <button type="button" class="remove-file" onclick="removeFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn" id="uploadBtn" disabled>
+                    <i class="fas fa-upload"></i> Upload and Import Data
+                </button>
+                <a href="{% url 'sample_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-list"></i> View Existing Samples
+                </a>
+            </div>
+        </form>
+        
+        <!-- Progress Bar -->
+        <div class="upload-progress" id="uploadProgress" style="display: none;">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+        </div>
+    </div>
+
+    <!-- Sidebar Information -->
+    <div>
+        <!-- CSV Format Guide -->
+        <div class="card">
+            <h4><i class="fas fa-info-circle"></i> CSV Format Requirements</h4>
+            <div class="format-guide">
+                <h5>Required Columns:</h5>
+                <ul class="column-list">
+                    <li><code>location</code> - Sample location name</li>
+                    <li><code>date</code> - Collection date (YYYY-MM-DD)</li>
+                    <li><code>lead</code> - Lead concentration (mg/L)</li>
+                    <li><code>mercury</code> - Mercury concentration (mg/L)</li>
+                    <li><code>cadmium</code> - Cadmium concentration (mg/L)</li>
+                    <li><code>arsenic</code> - Arsenic concentration (mg/L)</li>
+                </ul>
+                
+                <h5 style="margin-top: 1.5rem;">Optional Columns:</h5>
+                <ul class="column-list">
+                    <li><code>latitude</code> - GPS latitude</li>
+                    <li><code>longitude</code> - GPS longitude</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sample CSV -->
+        <div class="card">
+            <h4><i class="fas fa-download"></i> Download Sample CSV</h4>
+            <p>Download a template CSV file with the correct format and sample data.</p>
+            <button onclick="downloadSampleCSV()" class="btn" style="width: 100%; margin-top: 1rem;">
+                <i class="fas fa-download"></i> Download Template
+            </button>
+        </div>
+
+        <!-- Upload Tips -->
+        <div class="card">
+            <h4><i class="fas fa-lightbulb"></i> Upload Tips</h4>
+            <ul class="tips-list">
+                <li>Ensure CSV headers match exactly</li>
+                <li>Use decimal points for concentrations</li>
+                <li>Date format: YYYY-MM-DD (e.g., 2023-12-25)</li>
+                <li>Remove empty rows before upload</li>
+                <li>Use UTF-8 encoding for special characters</li>
+                <li>Maximum file size is 10MB</li>
+            </ul>
+        </div>
+
+        <!-- Recent Uploads -->
+        <div class="card">
+            <h4><i class="fas fa-history"></i> Quick Stats</h4>
+            <div class="stats-summary">
+                <div class="stat-item">
+                    <span class="stat-label">Total Samples:</span>
+                    <span class="stat-value">{{ total_samples|default:0 }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Locations:</span>
+                    <span class="stat-value">{{ locations_count|default:0 }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Last Upload:</span>
+                    <span class="stat-value">{{ last_upload|default:"Never" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+{% if message %}
+<div class="alert alert-success" style="margin-top: 2rem;">
+    <i class="fas fa-check-circle"></i> {{ message }}
+</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-danger" style="margin-top: 2rem;">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+</div>
+{% endif %}
+
+<style>
+.upload-section {
+    text-align: center;
+    padding: 2rem;
+    border: 2px dashed #e1e5e9;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+}
+
+.upload-section.drag-over {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.upload-header h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+}
+
+.upload-header p {
+    color: #666;
+    margin: 0;
+}
+
+.file-upload-wrapper {
+    position: relative;
+    margin: 2rem 0;
+}
+
+.file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+}
+
+.file-label {
+    display: block;
+    padding: 2rem;
+    background: #f8f9fa;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-label:hover {
+    background: #f0f0f0;
+    border-color: #667eea;
+    transform: translateY(-2px);
+}
+
+.file-label i {
+    font-size: 2rem;
+    color: #667eea;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.file-text {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.file-info {
+    display: block;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.file-preview {
+    background: rgba(102, 126, 234, 0.1);
+    border: 2px solid #667eea;
+    border-radius: 10px;
+    padding: 1rem;
+    margin: 2rem 0;
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.preview-header i {
+    font-size: 1.5rem;
+    color: #667eea;
+}
+
+.file-name {
+    font-weight: 600;
+    color: #333;
+    flex-grow: 1;
+}
+
+.file-size {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.remove-file {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.remove-file:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.form-actions {
+    text-align: center;
+    padding: 2rem 0;
+    border-top: 2px solid #f0f0f0;
+}
+
+.upload-progress {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e1e5e9;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    text-align: center;
+    font-weight: 600;
+    color: #333;
+}
+
+.format-guide {
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.column-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.column-list li {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.column-list li:last-child {
+    border-bottom: none;
+}
+
+.column-list code {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    min-width: 80px;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+.tips-list li {
+    padding: 0.5rem 0;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.tips-list li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0.5rem;
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.stats-summary {
+    font-size: 0.9rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: #666;
+}
+
+.stat-value {
+    font-weight: 600;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    div[style*="grid-template-columns: 1fr 350px"] {
+        display: block !important;
+    }
+    
+    .upload-section {
+        padding: 1rem;
+    }
+    
+    .file-label {
+        padding: 1.5rem 1rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csvFile');
+    const fileLabel = document.querySelector('.file-label');
+    const filePreview = document.getElementById('filePreview');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadSection = document.querySelector('.upload-section');
+
+    // File selection handler
+    fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            showFilePreview(file);
+            uploadBtn.disabled = false;
+        }
+    });
+
+    // Drag and drop handlers
+    uploadSection.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadSection.classList.add('drag-over');
+    });
+
+    uploadSection.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadSection.classList.remove('drag-over');
+    });
+
+    uploadSection.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadSection.classList.remove('drag-over');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0 && files[0].name.endsWith('.csv')) {
+            fileInput.files = files;
+            showFilePreview(files[0]);
+            uploadBtn.disabled = false;
+        } else {
+            alert('Please select a CSV file.');
+        }
+    });
+
+    // Form submission with progress
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!fileInput.files[0]) {
+            alert('Please select a file first.');
+            return;
+        }
+
+        showUploadProgress();
+        
+        // Simulate upload progress (in real implementation, use XMLHttpRequest for real progress)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 20;
+            if (progress > 90) {
+                progress = 90;
+            }
+            updateProgress(progress);
+        }, 200);
+
+        // Submit form
+        setTimeout(() => {
+            clearInterval(progressInterval);
+            updateProgress(100);
+            setTimeout(() => {
+                uploadForm.submit();
+            }, 500);
+        }, 2000);
+    });
+
+    function showFilePreview(file) {
+        const fileName = file.name;
+        const fileSize = formatFileSize(file.size);
+        
+        filePreview.querySelector('.file-name').textContent = fileName;
+        filePreview.querySelector('.file-size').textContent = fileSize;
+        filePreview.style.display = 'block';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function showUploadProgress() {
+        uploadProgress.style.display = 'block';
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<div class="loading"></div> Uploading...';
+    }
+
+    function updateProgress(percent) {
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        
+        progressFill.style.width = percent + '%';
+        progressText.textContent = `Uploading... ${Math.round(percent)}%`;
+        
+        if (percent >= 100) {
+            progressText.textContent = 'Processing data...';
+        }
+    }
+});
+
+function removeFile() {
+    const fileInput = document.getElementById('csvFile');
+    const filePreview = document.getElementById('filePreview');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    fileInput.value = '';
+    filePreview.style.display = 'none';
+    uploadBtn.disabled = true;
+}
+
+function downloadSampleCSV() {
+    const csvContent = `location,date,lead,mercury,cadmium,arsenic,latitude,longitude
+Site_A,2023-12-01,0.005,0.003,0.002,0.008,40.7128,-74.0060
+Site_B,2023-12-02,0.012,0.004,0.001,0.006,41.8781,-87.6298
+Site_C,2023-12-03,0.008,0.002,0.004,0.011,34.0522,-118.2437
+Site_D,2023-12-04,0.015,0.007,0.005,0.009,29.7604,-95.3698`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'water_quality_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

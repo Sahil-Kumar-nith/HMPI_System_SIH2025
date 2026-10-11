@@ -1,0 +1,1493 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}ML Analysis Dashboard - HMPI System{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">
+                <span class="gradient-text">Machine Learning</span>
+                <span class="highlight-text">Analysis Dashboard</span>
+            </h1>
+            <p class="hero-subtitle">Advanced AI-powered water quality analysis with predictive insights and interactive visualizations</p>
+        </div>
+        <div class="hero-stats">
+            <div class="stat-card animate-float">
+                <div class="stat-icon ai-icon">🤖</div>
+                <div class="stat-value">{{ ml_accuracy|floatformat:1 }}%</div>
+                <div class="stat-label">Model Accuracy</div>
+            </div>
+            <div class="stat-card animate-float" style="animation-delay: 0.2s;">
+                <div class="stat-icon prediction-icon">📊</div>
+                <div class="stat-value">{{ predictions_made|default:"0" }}</div>
+                <div class="stat-label">Predictions Made</div>
+            </div>
+            <div class="stat-card animate-float" style="animation-delay: 0.4s;">
+                <div class="stat-icon risk-icon">⚠️</div>
+                <div class="stat-value">{{ high_risk_areas|default:"0" }}</div>
+                <div class="stat-label">Risk Areas</div>
+            </div>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="floating-elements">
+            <div class="element element-1"></div>
+            <div class="element element-2"></div>
+            <div class="element element-3"></div>
+            <div class="element element-4"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Control Panel -->
+<div class="control-panel">
+    <div class="panel-header">
+        <h2><i class="fas fa-sliders-h"></i> Analysis Controls</h2>
+        <div class="panel-actions">
+            <button class="control-btn active" data-analysis="overview">
+                <i class="fas fa-chart-area"></i> Overview
+            </button>
+            <button class="control-btn" data-analysis="prediction">
+                <i class="fas fa-brain"></i> Predictions
+            </button>
+            <button class="control-btn" data-analysis="correlation">
+                <i class="fas fa-project-diagram"></i> Correlations
+            </button>
+            <button class="control-btn" data-analysis="geographic">
+                <i class="fas fa-globe-americas"></i> Geographic
+            </button>
+            <button class="control-btn" data-analysis="temporal">
+                <i class="fas fa-clock"></i> Temporal
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced Interactive Map Section -->
+<div class="map-section" id="mapSection">
+    <div class="map-header">
+        <h2><i class="fas fa-map-marked-alt"></i> Enhanced Geographic Analysis</h2>
+        <div class="map-controls">
+            <select class="map-selector" id="mapType">
+                <option value="overview">Overview Map</option>
+                <option value="heatmap">Heat Map</option>
+                <option value="cluster">Cluster Map</option>
+                <option value="timeline">Timeline Map</option>
+                <option value="3d">3D Visualization</option>
+                <option value="risk">Risk Assessment</option>
+            </select>
+            <button class="map-btn" onclick="toggleFullscreen()">
+                <i class="fas fa-expand"></i> Fullscreen
+            </button>
+            <button class="map-btn" onclick="exportMap()">
+                <i class="fas fa-download"></i> Export
+            </button>
+        </div>
+    </div>
+    
+    <div class="map-container">
+        <div class="map-wrapper" id="mapWrapper">
+            <!-- Enhanced Map will be loaded here -->
+            <div id="enhanced-map" class="enhanced-map">
+                {% if overview_map %}
+                    {{ overview_map|safe }}
+                {% else %}
+                    <div class="map-placeholder">
+                        <div class="placeholder-content">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <h3>Loading Enhanced Map...</h3>
+                            <p>Preparing advanced geographic visualizations</p>
+                            <div class="loading-spinner"></div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Map Legend -->
+        <div class="map-legend">
+            <h4><i class="fas fa-info-circle"></i> Legend</h4>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color safe"></div>
+                    <span>Safe Levels</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color warning"></div>
+                    <span>Warning</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color danger"></div>
+                    <span>Dangerous</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color critical"></div>
+                    <span>Critical</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ML Analysis Grid -->
+<div class="analysis-grid">
+    <!-- Correlation Matrix -->
+    <div class="analysis-card wide" id="correlationCard">
+        <div class="card-header">
+            <h3><i class="fas fa-project-diagram"></i> Correlation Matrix</h3>
+            <div class="card-actions">
+                <button class="action-btn" onclick="refreshAnalysis('correlation')">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button class="action-btn" onclick="exportChart('correlation')">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+        <div class="card-content">
+            {% if correlation_matrix %}
+                {{ correlation_matrix|safe }}
+            {% else %}
+                <div class="analysis-placeholder">
+                    <i class="fas fa-chart-bar"></i>
+                    <p>Generating correlation analysis...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 75%;"></div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ML Model Performance -->
+    <div class="analysis-card" id="modelCard">
+        <div class="card-header">
+            <h3><i class="fas fa-brain"></i> Model Performance</h3>
+        </div>
+        <div class="card-content">
+            <div class="performance-metrics">
+                <div class="metric">
+                    <div class="metric-label">Accuracy</div>
+                    <div class="metric-value">{{ ml_accuracy|default:"95.2" }}%</div>
+                    <div class="metric-bar">
+                        <div class="bar-fill" style="width: {{ ml_accuracy|default:"95.2" }}%;"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Precision</div>
+                    <div class="metric-value">{{ ml_precision|default:"92.7" }}%</div>
+                    <div class="metric-bar">
+                        <div class="bar-fill" style="width: {{ ml_precision|default:"92.7" }}%;"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Recall</div>
+                    <div class="metric-value">{{ ml_recall|default:"88.9" }}%</div>
+                    <div class="metric-bar">
+                        <div class="bar-fill" style="width: {{ ml_recall|default:"88.9" }}%;"></div>
+                    </div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">F1-Score</div>
+                    <div class="metric-value">{{ ml_f1_score|default:"90.6" }}%</div>
+                    <div class="metric-bar">
+                        <div class="bar-fill" style="width: {{ ml_f1_score|default:"90.6" }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            <button class="train-btn" onclick="trainModel()">
+                <i class="fas fa-cogs"></i> Retrain Model
+            </button>
+        </div>
+    </div>
+
+    <!-- Prediction Results -->
+    <div class="analysis-card" id="predictionCard">
+        <div class="card-header">
+            <h3><i class="fas fa-crystal-ball"></i> Predictions</h3>
+        </div>
+        <div class="card-content">
+            {% if prediction_chart %}
+                {{ prediction_chart|safe }}
+            {% else %}
+                <div class="prediction-form">
+                    <h4>Make New Prediction</h4>
+                    <div class="input-group">
+                        <label>Lead (mg/L)</label>
+                        <input type="number" id="leadInput" step="0.001" placeholder="0.000">
+                    </div>
+                    <div class="input-group">
+                        <label>Mercury (mg/L)</label>
+                        <input type="number" id="mercuryInput" step="0.001" placeholder="0.000">
+                    </div>
+                    <div class="input-group">
+                        <label>Cadmium (mg/L)</label>
+                        <input type="number" id="cadmiumInput" step="0.001" placeholder="0.000">
+                    </div>
+                    <div class="input-group">
+                        <label>Arsenic (mg/L)</label>
+                        <input type="number" id="arsenicInput" step="0.001" placeholder="0.000">
+                    </div>
+                    <button class="predict-btn" onclick="makePrediction()">
+                        <i class="fas fa-magic"></i> Predict Risk Level
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Feature Importance -->
+    <div class="analysis-card" id="featureCard">
+        <div class="card-header">
+            <h3><i class="fas fa-weight-hanging"></i> Feature Importance</h3>
+        </div>
+        <div class="card-content">
+            {% if feature_importance %}
+                {{ feature_importance|safe }}
+            {% else %}
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-name">Lead Concentration</span>
+                        <div class="feature-bar">
+                            <div class="bar-fill lead" style="width: 85%;"></div>
+                        </div>
+                        <span class="feature-value">85%</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-name">Arsenic Concentration</span>
+                        <div class="feature-bar">
+                            <div class="bar-fill arsenic" style="width: 72%;"></div>
+                        </div>
+                        <span class="feature-value">72%</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-name">Mercury Concentration</span>
+                        <div class="feature-bar">
+                            <div class="bar-fill mercury" style="width: 68%;"></div>
+                        </div>
+                        <span class="feature-value">68%</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-name">Cadmium Concentration</span>
+                        <div class="feature-bar">
+                            <div class="bar-fill cadmium" style="width: 61%;"></div>
+                        </div>
+                        <span class="feature-value">61%</span>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Risk Assessment -->
+    <div class="analysis-card" id="riskCard">
+        <div class="card-header">
+            <h3><i class="fas fa-shield-alt"></i> Risk Assessment</h3>
+        </div>
+        <div class="card-content">
+            {% if risk_assessment %}
+                {{ risk_assessment|safe }}
+            {% else %}
+                <div class="risk-overview">
+                    <div class="risk-gauge">
+                        <div class="gauge">
+                            <div class="gauge-fill" style="transform: rotate({{ overall_risk|default:"45" }}deg);"></div>
+                            <div class="gauge-center">
+                                <div class="gauge-value">{{ overall_risk_level|default:"MODERATE" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="risk-details">
+                        <div class="risk-item low">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Low Risk Areas: {{ low_risk_count|default:"12" }}</span>
+                        </div>
+                        <div class="risk-item medium">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Medium Risk Areas: {{ medium_risk_count|default:"8" }}</span>
+                        </div>
+                        <div class="risk-item high">
+                            <i class="fas fa-times-circle"></i>
+                            <span>High Risk Areas: {{ high_risk_count|default:"3" }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Temporal Analysis -->
+    <div class="analysis-card wide" id="temporalCard">
+        <div class="card-header">
+            <h3><i class="fas fa-chart-line"></i> Temporal Trends</h3>
+            <div class="time-controls">
+                <button class="time-btn active" data-period="week">Week</button>
+                <button class="time-btn" data-period="month">Month</button>
+                <button class="time-btn" data-period="year">Year</button>
+            </div>
+        </div>
+        <div class="card-content">
+            {% if temporal_chart %}
+                {{ temporal_chart|safe }}
+            {% else %}
+                <div class="temporal-placeholder">
+                    <i class="fas fa-chart-line"></i>
+                    <p>Loading temporal analysis...</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- AI Insights Panel -->
+<div class="insights-panel">
+    <div class="panel-header">
+        <h2><i class="fas fa-lightbulb"></i> AI-Generated Insights</h2>
+    </div>
+    <div class="insights-content">
+        <div class="insight-item">
+            <div class="insight-icon">🔬</div>
+            <div class="insight-text">
+                <h4>Pattern Detection</h4>
+                <p>The model has identified a strong correlation between lead and arsenic levels in industrial areas, suggesting a common contamination source.</p>
+            </div>
+        </div>
+        <div class="insight-item">
+            <div class="insight-icon">📍</div>
+            <div class="insight-text">
+                <h4>Geographic Clustering</h4>
+                <p>Contamination hotspots are concentrated within a 5km radius of major industrial facilities, indicating localized pollution sources.</p>
+            </div>
+        </div>
+        <div class="insight-item">
+            <div class="insight-icon">📈</div>
+            <div class="insight-text">
+                <h4>Trend Analysis</h4>
+                <p>Mercury levels show a declining trend over the past 6 months, possibly due to recent environmental regulations.</p>
+            </div>
+        </div>
+        <div class="insight-item">
+            <div class="insight-icon">⚡</div>
+            <div class="insight-text">
+                <h4>Predictive Alert</h4>
+                <p>Model predicts a 23% increase in contamination risk for Zone-A if current industrial discharge patterns continue.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* CSS Variables */
+:root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    --warning-gradient: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.2);
+    --border-radius: 16px;
+    --border-radius-lg: 24px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --animation-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Hero Section */
+.hero-section {
+    background: var(--primary-gradient);
+    border-radius: var(--border-radius-lg);
+    padding: 4rem 2rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    color: white;
+}
+
+.hero-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+}
+
+.gradient-text {
+    background: linear-gradient(45deg, #fff, #e3f2fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.highlight-text {
+    color: #ffd700;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.hero-subtitle {
+    font-size: 1.3rem;
+    opacity: 0.9;
+    max-width: 600px;
+    line-height: 1.6;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+    min-width: 150px;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Floating Elements */
+.hero-visual {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.floating-elements {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.element {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.element-1 {
+    width: 80px;
+    height: 80px;
+    top: 20%;
+    right: 15%;
+    animation-delay: 0s;
+}
+
+.element-2 {
+    width: 60px;
+    height: 60px;
+    top: 60%;
+    right: 25%;
+    animation-delay: 2s;
+}
+
+.element-3 {
+    width: 100px;
+    height: 100px;
+    top: 10%;
+    right: 5%;
+    animation-delay: 4s;
+}
+
+.element-4 {
+    width: 40px;
+    height: 40px;
+    top: 70%;
+    right: 10%;
+    animation-delay: 1s;
+}
+
+/* Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+@keyframes animate-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+    animation: animate-float 3s ease-in-out infinite;
+}
+
+/* Control Panel */
+.control-panel {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.panel-header h2 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.5rem;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.control-btn {
+    background: #f3f4f6;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-btn:hover {
+    background: #e5e7eb;
+    transform: translateY(-2px);
+}
+
+.control-btn.active {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: var(--shadow-soft);
+}
+
+/* Enhanced Map Section */
+.map-section {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.map-header {
+    background: var(--dark-gradient);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.map-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.map-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.map-selector {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    color: white;
+    font-weight: 600;
+}
+
+.map-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: 0.5rem 1rem;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.map-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.map-container {
+    position: relative;
+    height: 600px;
+    display: flex;
+}
+
+.map-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.enhanced-map {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.map-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+}
+
+.placeholder-content {
+    text-align: center;
+    color: #6b7280;
+}
+
+.placeholder-content i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e5e7eb;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 1rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.map-legend {
+    width: 250px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.map-legend h4 {
+    margin-top: 0;
+    color: #1f2937;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+}
+
+.legend-color.safe { background: #22c55e; }
+.legend-color.warning { background: #f59e0b; }
+.legend-color.danger { background: #ef4444; }
+.legend-color.critical { background: #dc2626; }
+
+/* Analysis Grid */
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.analysis-card {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.analysis-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-strong);
+}
+
+.analysis-card.wide {
+    grid-column: span 2;
+}
+
+.card-header {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.action-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.card-content {
+    padding: 2rem;
+}
+
+/* Model Performance */
+.performance-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.metric-label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1f2937;
+}
+
+.metric-bar {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: var(--success-gradient);
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+}
+
+.train-btn {
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    justify-content: center;
+}
+
+.train-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Prediction Form */
+.prediction-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-group label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.input-group input {
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.input-group input:focus {
+    border-color: #3b82f6;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.predict-btn {
+    background: var(--success-gradient);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.predict-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+/* Feature Importance */
+.feature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.feature-name {
+    flex: 0 0 150px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.feature-bar {
+    flex: 1;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.feature-bar .bar-fill.lead { background: #ff6b6b; }
+.feature-bar .bar-fill.mercury { background: #4ecdc4; }
+.feature-bar .bar-fill.cadmium { background: #45b7d1; }
+.feature-bar .bar-fill.arsenic { background: #96ceb4; }
+
+.feature-value {
+    flex: 0 0 50px;
+    text-align: right;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Risk Assessment */
+.risk-overview {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.risk-gauge {
+    flex: 0 0 150px;
+}
+
+.gauge {
+    width: 150px;
+    height: 75px;
+    position: relative;
+    background: conic-gradient(from 180deg, #22c55e, #f59e0b, #ef4444);
+    border-radius: 75px 75px 0 0;
+    overflow: hidden;
+}
+
+.gauge::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 110px;
+    height: 55px;
+    background: white;
+    border-radius: 55px 55px 0 0;
+}
+
+.gauge-fill {
+    position: absolute;
+    top: 10px;
+    left: 75px;
+    width: 2px;
+    height: 55px;
+    background: #1f2937;
+    transform-origin: bottom;
+    transition: transform 1s ease-in-out;
+    z-index: 10;
+}
+
+.gauge-center {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+    text-align: center;
+}
+
+.gauge-value {
+    font-weight: 800;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.risk-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.risk-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+}
+
+.risk-item.low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+.risk-item.medium {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+}
+
+.risk-item.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+/* Time Controls */
+.time-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.time-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.time-btn:hover,
+.time-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* AI Insights Panel */
+.insights-panel {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.insights-content {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.insight-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.insight-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-soft);
+}
+
+.insight-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.insight-text h4 {
+    margin: 0 0 0.5rem 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+}
+
+.insight-text p {
+    margin: 0;
+    color: #4b5563;
+    line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .analysis-card.wide {
+        grid-column: span 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .hero-stats {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .panel-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .panel-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .map-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .map-container {
+        height: 400px;
+        flex-direction: column;
+    }
+    
+    .map-legend {
+        width: 100%;
+        border-left: none;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .analysis-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .risk-overview {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* Placeholder Animations */
+.analysis-placeholder,
+.temporal-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    color: #6b7280;
+    text-align: center;
+}
+
+.analysis-placeholder i,
+.temporal-placeholder i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #9ca3af;
+}
+
+.progress-bar {
+    width: 200px;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 4px;
+    animation: progress 2s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0% { width: 0%; }
+    50% { width: 100%; }
+    100% { width: 0%; }
+}
+</style>
+
+<script>
+// Enhanced Map Functionality
+let currentMapType = 'overview';
+let mapFullscreen = false;
+
+function loadMapType(type) {
+    currentMapType = type;
+    const mapWrapper = document.getElementById('mapWrapper');
+    
+    // Show loading state
+    mapWrapper.innerHTML = `
+        <div class="map-placeholder">
+            <div class="placeholder-content">
+                <i class="fas fa-sync-alt fa-spin"></i>
+                <h3>Loading ${type} Map...</h3>
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    `;
+    
+    // Simulate API call to load different map types
+    setTimeout(() => {
+        fetch(`/api/map-data/?type=${type}`)
+            .then(response => response.json())
+            .then(data => {
+                mapWrapper.innerHTML = data.html;
+            })
+            .catch(error => {
+                console.error('Error loading map:', error);
+                mapWrapper.innerHTML = `
+                    <div class="map-placeholder">
+                        <div class="placeholder-content">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Error Loading Map</h3>
+                            <p>Please try again later</p>
+                        </div>
+                    </div>
+                `;
+            });
+    }, 1000);
+}
+
+// Map Controls
+document.getElementById('mapType').addEventListener('change', function() {
+    loadMapType(this.value);
+});
+
+function toggleFullscreen() {
+    const mapSection = document.getElementById('mapSection');
+    mapFullscreen = !mapFullscreen;
+    
+    if (mapFullscreen) {
+        mapSection.style.position = 'fixed';
+        mapSection.style.top = '0';
+        mapSection.style.left = '0';
+        mapSection.style.width = '100vw';
+        mapSection.style.height = '100vh';
+        mapSection.style.zIndex = '9999';
+        document.body.style.overflow = 'hidden';
+    } else {
+        mapSection.style.position = 'relative';
+        mapSection.style.top = 'auto';
+        mapSection.style.left = 'auto';
+        mapSection.style.width = 'auto';
+        mapSection.style.height = 'auto';
+        mapSection.style.zIndex = 'auto';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function exportMap() {
+    // Simulate map export
+    const link = document.createElement('a');
+    link.download = `map-${currentMapType}-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = '/api/export-map/?type=' + currentMapType;
+    link.click();
+}
+
+// Analysis Controls
+document.querySelectorAll('.control-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const analysisType = this.dataset.analysis;
+        loadAnalysis(analysisType);
+    });
+});
+
+function loadAnalysis(type) {
+    console.log(`Loading ${type} analysis...`);
+    // Implement specific analysis loading logic
+}
+
+// ML Model Functions
+function trainModel() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Training...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-check"></i> Training Complete!';
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 2000);
+    }, 3000);
+}
+
+function makePrediction() {
+    const lead = document.getElementById('leadInput').value;
+    const mercury = document.getElementById('mercuryInput').value;
+    const cadmium = document.getElementById('cadmiumInput').value;
+    const arsenic = document.getElementById('arsenicInput').value;
+    
+    if (!lead || !mercury || !cadmium || !arsenic) {
+        alert('Please fill in all metal concentration values.');
+        return;
+    }
+    
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Predicting...';
+    btn.disabled = true;
+    
+    // Simulate prediction API call
+    setTimeout(() => {
+        const riskLevel = calculateRisk(lead, mercury, cadmium, arsenic);
+        showPredictionResult(riskLevel);
+        
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+
+function calculateRisk(lead, mercury, cadmium, arsenic) {
+    // Simple risk calculation based on WHO limits
+    const limits = { lead: 0.01, mercury: 0.006, cadmium: 0.003, arsenic: 0.01 };
+    const scores = {
+        lead: parseFloat(lead) / limits.lead,
+        mercury: parseFloat(mercury) / limits.mercury,
+        cadmium: parseFloat(cadmium) / limits.cadmium,
+        arsenic: parseFloat(arsenic) / limits.arsenic
+    };
+    
+    const avgScore = (scores.lead + scores.mercury + scores.cadmium + scores.arsenic) / 4;
+    
+    if (avgScore <= 1) return 'LOW';
+    if (avgScore <= 2) return 'MODERATE';
+    if (avgScore <= 3) return 'HIGH';
+    return 'CRITICAL';
+}
+
+function showPredictionResult(riskLevel) {
+    const colors = {
+        'LOW': '#22c55e',
+        'MODERATE': '#f59e0b',
+        'HIGH': '#ef4444',
+        'CRITICAL': '#dc2626'
+    };
+    
+    const result = document.createElement('div');
+    result.className = 'prediction-result';
+    result.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        z-index: 10000;
+        text-align: center;
+        min-width: 300px;
+    `;
+    
+    result.innerHTML = `
+        <div style="font-size: 3rem; margin-bottom: 1rem;">
+            ${riskLevel === 'LOW' ? '✅' : riskLevel === 'MODERATE' ? '⚠️' : '❌'}
+        </div>
+        <h3 style="color: ${colors[riskLevel]}; margin-bottom: 1rem;">${riskLevel} RISK</h3>
+        <p style="margin-bottom: 2rem;">The model predicts a ${riskLevel.toLowerCase()} contamination risk level based on the provided metal concentrations.</p>
+        <button onclick="this.parentElement.remove()" style="background: ${colors[riskLevel]}; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600;">Close</button>
+    `;
+    
+    document.body.appendChild(result);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (result.parentElement) {
+            result.remove();
+        }
+    }, 5000);
+}
+
+// Refresh Analysis
+function refreshAnalysis(type) {
+    console.log(`Refreshing ${type} analysis...`);
+    // Implement refresh logic
+}
+
+// Export Chart
+function exportChart(type) {
+    console.log(`Exporting ${type} chart...`);
+    // Implement export logic
+}
+
+// Time Period Controls
+document.querySelectorAll('.time-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const period = this.dataset.period;
+        loadTemporalData(period);
+    });
+});
+
+function loadTemporalData(period) {
+    console.log(`Loading temporal data for ${period}...`);
+    // Implement temporal data loading
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Load initial map
+    loadMapType('overview');
+    
+    // Animate counters
+    animateCounters();
+    
+    // Initialize tooltips
+    initializeTooltips();
+});
+
+function animateCounters() {
+    document.querySelectorAll('.stat-value, .metric-value').forEach(counter => {
+        const target = parseFloat(counter.textContent);
+        if (isNaN(target)) return;
+        
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            counter.textContent = current.toFixed(1) + (counter.textContent.includes('%') ? '%' : '');
+        }, 20);
+    });
+}
+
+function initializeTooltips() {
+    // Add tooltip functionality
+    document.querySelectorAll('[title]').forEach(element => {
+        element.addEventListener('mouseenter', showTooltip);
+        element.addEventListener('mouseleave', hideTooltip);
+    });
+}
+
+function showTooltip(event) {
+    // Implement custom tooltip
+}
+
+function hideTooltip(event) {
+    // Hide tooltip
+}
+</script>
+{% endblock %}

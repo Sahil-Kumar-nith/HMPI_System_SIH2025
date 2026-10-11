@@ -1,0 +1,3575 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}Advanced Sample Filtering - HMPI System{% endblock %}
+
+{% block content %}
+<!-- Enhanced Filter Hero -->
+<div class="enhanced-filter-hero">
+    <div class="filter-background">
+        <div class="search-waves">
+            <div class="wave wave-1"></div>
+            <div class="wave wave-2"></div>
+            <div class="wave wave-3"></div>
+        </div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="filter-badge">
+                <i class="fas fa-search"></i>
+                <span>Advanced Search & Filter</span>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-primary">Intelligent Sample</span>
+                <span class="title-secondary">Discovery System</span>
+            </h1>
+            <p class="hero-description">
+                Powerful filtering engine with real-time search, smart suggestions, and advanced analytics. 
+                Find exactly what you need with precision and speed.
+            </p>
+            <div class="search-stats" id="liveStats">
+                <div class="stat-item" onclick="showAllSamples()">
+                    <div class="stat-number" id="totalSamplesCount">{{ total_samples|default:"0" }}</div>
+                    <div class="stat-label">Total Samples</div>
+                </div>
+                <div class="stat-item" onclick="showFilteredResults()">
+                    <div class="stat-number" id="filteredCount">{{ filtered_count|default:"0" }}</div>
+                    <div class="stat-label">Filtered Results</div>
+                </div>
+                <div class="stat-item" onclick="showLocationStats()">
+                    <div class="stat-number" id="locationsCount">{{ unique_locations|length|default:"0" }}</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="search-animation">
+                <div class="search-circle interactive" onclick="focusSearch()">
+                    <div class="search-icon">
+                        <i class="fas fa-search" id="searchAnimationIcon"></i>
+                    </div>
+                    <div class="search-pulse" id="searchPulse"></div>
+                </div>
+                <div class="filter-tags-preview">
+                    <div class="preview-tag interactive" onclick="quickFilterLocation()" data-filter="location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Location
+                    </div>
+                    <div class="preview-tag interactive" onclick="quickFilterDate()" data-filter="date">
+                        <i class="fas fa-calendar"></i>
+                        Date Range
+                    </div>
+                    <div class="preview-tag interactive" onclick="quickFilterHPI()" data-filter="hpi">
+                        <i class="fas fa-calculator"></i>
+                        HPI Score
+                    </div>
+                    <div class="preview-tag interactive" onclick="quickFilterSafety()" data-filter="safety">
+                        <i class="fas fa-shield-alt"></i>
+                        Safety Level
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modern Filter Container -->
+<div class="modern-filter-container">
+    <!-- Enhanced Search Section -->
+    <div class="search-section">
+        <div class="search-input-container">
+            <div class="search-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="quickSearch" class="modern-search-input" 
+                       placeholder="Search samples by location, ID, or notes..."
+                       value="{{ request.GET.q }}" autocomplete="off">
+                <div class="search-suggestions" id="searchSuggestions"></div>
+                <div class="search-loading" id="searchLoading" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+                <div class="search-actions">
+                    <button class="search-btn primary" id="searchBtn" onclick="performQuickSearch()">
+                        <i class="fas fa-search"></i>
+                        <span class="btn-text">Search</span>
+                    </button>
+                    <button class="search-btn secondary" onclick="clearAllFilters()">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </button>
+                    <button class="search-btn voice" id="voiceSearchBtn" onclick="toggleVoiceSearch()">
+                        <i class="fas fa-microphone" id="voiceIcon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Active Filters -->
+    <div class="active-filters-card">
+        <div class="card-header">
+            <div class="header-left">
+                <i class="fas fa-filter filter-icon"></i>
+                <h3>Active Filters</h3>
+                <span class="filter-count-badge" id="activeFilterCount">0</span>
+            </div>
+            <button class="clear-all-btn" id="clearAllFiltersBtn" onclick="clearAllFilters()" disabled>
+                <i class="fas fa-trash-alt"></i>
+                Clear All
+            </button>
+        </div>
+        <div class="active-filters-content">
+            <div class="active-filters-list" id="activeFiltersList">
+                <div class="no-filters-state" id="noFiltersState">
+                    <i class="fas fa-filter-circle-xmark"></i>
+                    <p>No active filters</p>
+                    <small>Add filters below to refine your search</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Quick Filters -->
+    <div class="quick-filters-card">
+        <div class="card-header">
+            <div class="header-left">
+                <i class="fas fa-bolt lightning-icon"></i>
+                <h3>Quick Filters</h3>
+            </div>
+        </div>
+        <div class="quick-filters-grid" id="quickFiltersGrid">
+            <button class="quick-filter-item safe" onclick="applyQuickFilter('safe')">
+                <div class="filter-icon-wrapper">
+                    <i class="fas fa-shield-check"></i>
+                </div>
+                <div class="filter-content">
+                    <span class="filter-title">Safe Samples</span>
+                    <small>All parameters within limits</small>
+                </div>
+                <div class="filter-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </button>
+
+            <button class="quick-filter-item unsafe" onclick="applyQuickFilter('unsafe')">
+                <div class="filter-icon-wrapper">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="filter-content">
+                    <span class="filter-title">Unsafe Samples</span>
+                    <small>Exceeding safety limits</small>
+                </div>
+                <div class="filter-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </button>
+
+            <button class="quick-filter-item recent" onclick="applyQuickFilter('recent')">
+                <div class="filter-icon-wrapper">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="filter-content">
+                    <span class="filter-title">Recent (7 days)</span>
+                    <small>Latest collected samples</small>
+                </div>
+                <div class="filter-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </button>
+
+            <button class="quick-filter-item high-hpi" onclick="applyQuickFilter('high-hpi')">
+                <div class="filter-icon-wrapper">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="filter-content">
+                    <span class="filter-title">High HPI (>100)</span>
+                    <small>Elevated pollution index</small>
+                </div>
+                <div class="filter-arrow">
+                    <i class="fas fa-chevron-right"></i>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Enhanced Advanced Filters -->
+    <div class="advanced-filters-section">
+        <form method="get" id="advancedFilterForm" class="filter-form">
+            <!-- Location & Date Card -->
+            <div class="filter-card location-date-card" id="locationSection">
+                <div class="card-header expandable" onclick="toggleCard(this)">
+                    <div class="header-left">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="header-info">
+                            <h3>Location & Date Filters</h3>
+                            <span class="status-badge inactive" id="locationStatus">INACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <span class="applied-count" id="locationAppliedCount">0</span>
+                        <i class="fas fa-chevron-down expand-icon"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="modern-label">
+                                <i class="fas fa-map-pin"></i>
+                                Select Locations
+                            </label>
+                            <div class="custom-select-wrapper">
+                                <select class="modern-select" name="location" id="locationSelect" multiple onchange="updateLocationFilter()">
+                                    <option value="">All Locations</option>
+                                    {% for location in unique_locations %}
+                                    <option value="{{ location }}" 
+                                            {% if location in request.GET.location %}selected{% endif %}>
+                                        {{ location }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <div class="select-icon">
+                                    <i class="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="modern-label">
+                                <i class="fas fa-calendar-range"></i>
+                                Date Range
+                            </label>
+                            <div class="date-input-group">
+                                <div class="date-wrapper">
+                                    <input type="date" name="date_from" id="dateFrom"
+                                           value="{{ request.GET.date_from }}" 
+                                           class="modern-date-input" onchange="updateDateFilter()">
+                                    <i class="fas fa-calendar-alt date-icon"></i>
+                                </div>
+                                <span class="date-separator">to</span>
+                                <div class="date-wrapper">
+                                    <input type="date" name="date_to" id="dateTo"
+                                           value="{{ request.GET.date_to }}" 
+                                           class="modern-date-input" onchange="updateDateFilter()">
+                                    <i class="fas fa-calendar-alt date-icon"></i>
+                                </div>
+                            </div>
+                            <div class="date-presets">
+                                <button type="button" class="preset-chip" onclick="setDateRange('today')">Today</button>
+                                <button type="button" class="preset-chip" onclick="setDateRange('week')">This Week</button>
+                                <button type="button" class="preset-chip" onclick="setDateRange('month')">This Month</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heavy Metal Concentrations Card -->
+            <div class="filter-card metal-card" id="metalSection">
+                <div class="card-header expandable" onclick="toggleCard(this)">
+                    <div class="header-left">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-atom"></i>
+                        </div>
+                        <div class="header-info">
+                            <h3>Heavy Metal Concentrations</h3>
+                            <span class="status-badge inactive" id="metalStatus">INACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <span class="applied-count" id="metalAppliedCount">0</span>
+                        <i class="fas fa-chevron-down expand-icon"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="metals-grid">
+                        <div class="metal-item" data-metal="lead">
+                            <div class="metal-header">
+                                <div class="element-badge lead">Pb</div>
+                                <div class="metal-info">
+                                    <span class="metal-name">Lead</span>
+                                    <small>WHO Limit: 0.01 mg/L</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableLead" onchange="toggleMetalFilter('lead')">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="range-inputs" id="leadInputs">
+                                <input type="number" name="lead_min" placeholder="Min (mg/L)" 
+                                       step="0.001" min="0" max="0.1" value="{{ request.GET.lead_min }}" 
+                                       class="range-input" onchange="updateMetalRange('lead')">
+                                <input type="number" name="lead_max" placeholder="Max (mg/L)" 
+                                       step="0.001" min="0" max="0.1" value="{{ request.GET.lead_max }}" 
+                                       class="range-input" onchange="updateMetalRange('lead')">
+                            </div>
+                        </div>
+                        
+                        <div class="metal-item" data-metal="mercury">
+                            <div class="metal-header">
+                                <div class="element-badge mercury">Hg</div>
+                                <div class="metal-info">
+                                    <span class="metal-name">Mercury</span>
+                                    <small>WHO Limit: 0.006 mg/L</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableMercury" onchange="toggleMetalFilter('mercury')">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="range-inputs" id="mercuryInputs">
+                                <input type="number" name="mercury_min" placeholder="Min (mg/L)" 
+                                       step="0.001" min="0" max="0.06" value="{{ request.GET.mercury_min }}" 
+                                       class="range-input" onchange="updateMetalRange('mercury')">
+                                <input type="number" name="mercury_max" placeholder="Max (mg/L)" 
+                                       step="0.001" min="0" max="0.06" value="{{ request.GET.mercury_max }}" 
+                                       class="range-input" onchange="updateMetalRange('mercury')">
+                            </div>
+                        </div>
+
+                        <div class="metal-item" data-metal="cadmium">
+                            <div class="metal-header">
+                                <div class="element-badge cadmium">Cd</div>
+                                <div class="metal-info">
+                                    <span class="metal-name">Cadmium</span>
+                                    <small>WHO Limit: 0.003 mg/L</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableCadmium" onchange="toggleMetalFilter('cadmium')">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="range-inputs" id="cadmiumInputs">
+                                <input type="number" name="cadmium_min" placeholder="Min (mg/L)" 
+                                       step="0.001" min="0" max="0.03" value="{{ request.GET.cadmium_min }}" 
+                                       class="range-input" onchange="updateMetalRange('cadmium')">
+                                <input type="number" name="cadmium_max" placeholder="Max (mg/L)" 
+                                       step="0.001" min="0" max="0.03" value="{{ request.GET.cadmium_max }}" 
+                                       class="range-input" onchange="updateMetalRange('cadmium')">
+                            </div>
+                        </div>
+
+                        <div class="metal-item" data-metal="arsenic">
+                            <div class="metal-header">
+                                <div class="element-badge arsenic">As</div>
+                                <div class="metal-info">
+                                    <span class="metal-name">Arsenic</span>
+                                    <small>WHO Limit: 0.01 mg/L</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="enableArsenic" onchange="toggleMetalFilter('arsenic')">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="range-inputs" id="arsenicInputs">
+                                <input type="number" name="arsenic_min" placeholder="Min (mg/L)" 
+                                       step="0.001" min="0" max="0.1" value="{{ request.GET.arsenic_min }}" 
+                                       class="range-input" onchange="updateMetalRange('arsenic')">
+                                <input type="number" name="arsenic_max" placeholder="Max (mg/L)" 
+                                       step="0.001" min="0" max="0.1" value="{{ request.GET.arsenic_max }}" 
+                                       class="range-input" onchange="updateMetalRange('arsenic')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HPI Score & Safety Card -->
+            <div class="filter-card hpi-card" id="hpiSection">
+                <div class="card-header expandable" onclick="toggleCard(this)">
+                    <div class="header-left">
+                        <div class="icon-wrapper">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div class="header-info">
+                            <h3>HPI Score & Safety</h3>
+                            <span class="status-badge inactive" id="hpiStatus">INACTIVE</span>
+                        </div>
+                    </div>
+                    <div class="header-right">
+                        <span class="applied-count" id="hpiAppliedCount">0</span>
+                        <i class="fas fa-chevron-down expand-icon"></i>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <div class="range-slider-container">
+                                <label class="modern-label">
+                                    <i class="fas fa-calculator"></i>
+                                    HPI Score Range
+                                </label>
+                                <div class="dual-range-slider">
+                                    <input type="range" name="hpi_min" id="hpiMin" min="0" max="300" 
+                                           value="{{ request.GET.hpi_min|default:'0' }}" 
+                                           class="range-min" onchange="updateHPIRange()">
+                                    <input type="range" name="hpi_max" id="hpiMax" min="0" max="300" 
+                                           value="{{ request.GET.hpi_max|default:'300' }}" 
+                                           class="range-max" onchange="updateHPIRange()">
+                                    <div class="range-track">
+                                        <div class="range-fill" id="hpiRangeFill"></div>
+                                    </div>
+                                </div>
+                                <div class="range-values">
+                                    <span class="min-val" id="hpiMinVal">0</span>
+                                    <span class="max-val" id="hpiMaxVal">300</span>
+                                </div>
+                                <div class="hpi-presets">
+                                    <button type="button" class="preset-chip safe" onclick="setHPIRange(0, 50)">
+                                        Safe (0-50)
+                                    </button>
+                                    <button type="button" class="preset-chip moderate" onclick="setHPIRange(50, 100)">
+                                        Moderate (50-100)
+                                    </button>
+                                    <button type="button" class="preset-chip high" onclick="setHPIRange(100, 200)">
+                                        High (100-200)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="modern-label">
+                                <i class="fas fa-shield-check"></i>
+                                Safety Status
+                            </label>
+                            <div class="safety-checkboxes">
+                                <label class="safety-checkbox">
+                                    <input type="checkbox" name="safety_status" value="drinkable"
+                                           {% if 'drinkable' in request.GET.safety_status %}checked{% endif %}
+                                           onchange="updateSafetyFilter()">
+                                    <span class="checkmark safe"></span>
+                                    <span class="safety-text">Safe for Drinking</span>
+                                </label>
+                                <label class="safety-checkbox">
+                                    <input type="checkbox" name="safety_status" value="not_drinkable"
+                                           {% if 'not_drinkable' in request.GET.safety_status %}checked{% endif %}
+                                           onchange="updateSafetyFilter()">
+                                    <span class="checkmark unsafe"></span>
+                                    <span class="safety-text">Not Safe for Drinking</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Enhanced Action Bar -->
+    <div class="action-bar">
+        <div class="primary-actions">
+            <button class="action-btn primary" onclick="applyFilters()">
+                <i class="fas fa-search"></i>
+                <span>Apply Filters</span>
+                <div class="filter-count-indicator" id="filterCountIndicator">0</div>
+            </button>
+            <button class="action-btn secondary" onclick="resetAllFilters()">
+                <i class="fas fa-undo"></i>
+                <span>Reset All</span>
+            </button>
+        </div>
+        
+        <div class="secondary-actions">
+            <button class="action-btn toggle auto-apply-off" id="autoApplyBtn" onclick="toggleAutoApply()">
+                <i class="fas fa-magic"></i>
+                <span>Auto Apply: OFF</span>
+            </button>
+            <button class="action-btn export" onclick="exportResults()">
+                <i class="fas fa-download"></i>
+                <span>Export</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Results Section -->
+<div class="results-section">
+    {% if samples %}
+        <!-- Results Header -->
+        <div class="results-header">
+            <div class="results-info">
+                <h3>
+                    <i class="fas fa-list-alt"></i>
+                    Filtered Results
+                    <span class="results-count">({{ samples|length }} samples)</span>
+                </h3>
+                <div class="results-summary">
+                    <div class="summary-item safe">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ safe_count|default:"0" }} Safe</span>
+                    </div>
+                    <div class="summary-item unsafe">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>{{ unsafe_count|default:"0" }} Unsafe</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-toggle">
+                <button class="view-btn active" data-view="table" onclick="switchView('table')">
+                    <i class="fas fa-table"></i>
+                    Table
+                </button>
+                <button class="view-btn" data-view="cards" onclick="switchView('cards')">
+                    <i class="fas fa-th-large"></i>
+                    Cards
+                </button>
+            </div>
+        </div>
+        
+        <!-- Table View -->
+        <div class="view-container active" id="tableView">
+            <div class="table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Location</th>
+                            <th>Date</th>
+                            <th>HPI Score</th>
+                            <th>Heavy Metals</th>
+                            <th>Safety Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sample in samples %}
+                        <tr class="sample-row">
+                            <td class="id-cell">
+                                <span class="sample-id">#{{ sample.id }}</span>
+                            </td>
+                            <td class="location-cell">
+                                <div class="location-info">
+                                    <i class="fas fa-map-pin"></i>
+                                    <span>{{ sample.location }}</span>
+                                </div>
+                            </td>
+                            <td class="date-cell">
+                                <div class="date-info">
+                                    <span class="date-main">{{ sample.date|date:"M d, Y" }}</span>
+                                    <span class="date-day">{{ sample.date|date:"D" }}</span>
+                                </div>
+                            </td>
+                            <td class="hpi-cell">
+                                {% if sample.hpi_score %}
+                                <div class="hpi-indicator {% if sample.hpi_score > 100 %}critical{% elif sample.hpi_score > 50 %}high{% else %}safe{% endif %}">
+                                    <span class="hpi-value">{{ sample.hpi_score|floatformat:1 }}</span>
+                                </div>
+                                {% else %}
+                                <span class="hpi-pending">Calculating...</span>
+                                {% endif %}
+                            </td>
+                            <td class="metals-cell">
+                                <div class="metals-list">
+                                    <span class="metal-item {% if sample.lead > 0.01 %}dangerous{% else %}safe{% endif %}">
+                                        Pb: {{ sample.lead|floatformat:3 }}
+                                    </span>
+                                    <span class="metal-item {% if sample.mercury > 0.006 %}dangerous{% else %}safe{% endif %}">
+                                        Hg: {{ sample.mercury|floatformat:3 }}
+                                    </span>
+                                    <span class="metal-item {% if sample.cadmium > 0.003 %}dangerous{% else %}safe{% endif %}">
+                                        Cd: {{ sample.cadmium|floatformat:3 }}
+                                    </span>
+                                    <span class="metal-item {% if sample.arsenic > 0.01 %}dangerous{% else %}safe{% endif %}">
+                                        As: {{ sample.arsenic|floatformat:3 }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="safety-cell">
+                                {% if sample.is_drinkable %}
+                                <div class="safety-badge safe">
+                                    <i class="fas fa-shield-check"></i>
+                                    <span>Safe</span>
+                                </div>
+                                {% else %}
+                                <div class="safety-badge unsafe">
+                                    <i class="fas fa-shield-times"></i>
+                                    <span>Unsafe</span>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-buttons">
+                                    <a href="{% url 'sample_detail' sample.id %}" class="action-btn view">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="action-btn export" onclick="exportSample({{ sample.id }})">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Cards View -->
+        <div class="view-container" id="cardsView">
+            <div class="cards-grid">
+                {% for sample in samples %}
+                <div class="result-card">
+                    <div class="card-header">
+                        <div class="card-id">
+                            <span class="sample-id">#{{ sample.id }}</span>
+                            {% if sample.is_drinkable %}
+                            <div class="safety-icon safe">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            {% else %}
+                            <div class="safety-icon unsafe">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="card-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ sample.location }}
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="hpi-section">
+                            <div class="hpi-label">HPI Score</div>
+                            {% if sample.hpi_score %}
+                            <div class="hpi-value-large {% if sample.hpi_score > 100 %}critical{% elif sample.hpi_score > 50 %}high{% else %}safe{% endif %}">
+                                {{ sample.hpi_score|floatformat:1 }}
+                            </div>
+                            {% else %}
+                            <div class="hpi-value-large pending">--</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="metals-section">
+                            <h4>Metal Concentrations</h4>
+                            <div class="metals-list-card">
+                                <div class="metal-item-card">
+                                    <span class="metal-name">Lead (Pb)</span>
+                                    <span class="metal-value {% if sample.lead > 0.01 %}dangerous{% else %}safe{% endif %}">
+                                        {{ sample.lead|floatformat:3 }} mg/L
+                                    </span>
+                                </div>
+                                <div class="metal-item-card">
+                                    <span class="metal-name">Mercury (Hg)</span>
+                                    <span class="metal-value {% if sample.mercury > 0.006 %}dangerous{% else %}safe{% endif %}">
+                                        {{ sample.mercury|floatformat:3 }} mg/L
+                                    </span>
+                                </div>
+                                <div class="metal-item-card">
+                                    <span class="metal-name">Cadmium (Cd)</span>
+                                    <span class="metal-value {% if sample.cadmium > 0.003 %}dangerous{% else %}safe{% endif %}">
+                                        {{ sample.cadmium|floatformat:3 }} mg/L
+                                    </span>
+                                </div>
+                                <div class="metal-item-card">
+                                    <span class="metal-name">Arsenic (As)</span>
+                                    <span class="metal-value {% if sample.arsenic > 0.01 %}dangerous{% else %}safe{% endif %}">
+                                        {{ sample.arsenic|floatformat:3 }} mg/L
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <div class="card-date">{{ sample.date|date:"M d, Y" }}</div>
+                        <div class="card-actions">
+                            <a href="{% url 'sample_detail' sample.id %}" class="card-action-btn primary">
+                                <i class="fas fa-eye"></i>
+                                Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+    {% else %}
+        <!-- No Results State -->
+        <div class="no-results">
+            <div class="no-results-icon">
+                <i class="fas fa-search-minus"></i>
+            </div>
+            <h3>No Samples Match Your Criteria</h3>
+            <p>Try adjusting your filters or search terms to find more results.</p>
+            <div class="no-results-actions">
+                <button class="no-results-btn primary" onclick="clearAllFilters()">
+                    <i class="fas fa-times"></i>
+                    Clear All Filters
+                </button>
+                <a href="{% url 'add_sample' %}" class="no-results-btn secondary">
+                    <i class="fas fa-plus"></i>
+                    Add New Sample
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+:root {
+    --primary-blue: #667eea;
+    --primary-purple: #764ba2;
+    --success-green: #10b981;
+    --warning-orange: #f59e0b;
+    --danger-red: #ef4444;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-light: #9ca3af;
+    --bg-white: #ffffff;
+    --bg-gray-50: #f9fafb;
+    --bg-gray-100: #f3f4f6;
+    --border-gray: #e5e7eb;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    --gradient-primary: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-purple) 100%);
+    --gradient-success: linear-gradient(135deg, #059669 0%, var(--success-green) 100%);
+    --gradient-warning: linear-gradient(135deg, #d97706 0%, var(--warning-orange) 100%);
+    --gradient-danger: linear-gradient(135deg, #dc2626 0%, var(--danger-red) 100%);
+    --border-radius: 12px;
+    --border-radius-lg: 16px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Filter Hero */
+.enhanced-filter-hero {
+    position: relative;
+    background: var(--gradient-primary);
+    border-radius: var(--border-radius-lg);
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    color: white;
+    overflow: hidden;
+}
+
+.filter-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.search-waves {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    width: 150%;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 80px;
+    animation: wave-float 6s ease-in-out infinite;
+}
+
+.wave-1 {
+    left: -25%;
+    animation-delay: 0s;
+}
+
+.wave-2 {
+    left: -25%;
+    animation-delay: 2s;
+    opacity: 0.7;
+}
+
+.wave-3 {
+    left: -25%;
+    animation-delay: 4s;
+    opacity: 0.5;
+}
+
+@keyframes wave-float {
+    0%, 100% { transform: translateX(0px) translateY(0px); }
+    50% { transform: translateX(20px) translateY(-15px); }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3rem;
+}
+
+.filter-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.875rem;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+}
+
+.title-primary {
+    display: block;
+    background: linear-gradient(45deg, #fff, #e3f2fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.title-secondary {
+    display: block;
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.hero-description {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    opacity: 0.9;
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+.search-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.stat-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.8;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Interactive Search Animation */
+.search-animation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.search-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.search-circle.interactive {
+    cursor: pointer;
+}
+
+.search-circle.interactive:hover {
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.search-circle.searching {
+    animation: searching-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes searching-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.search-icon {
+    font-size: 3rem;
+    color: white;
+    animation: pulse-search 2s ease-in-out infinite;
+    transition: var(--transition);
+}
+
+.search-circle.searching .search-icon {
+    animation: searching-spin 1s linear infinite;
+}
+
+@keyframes searching-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-search {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+.search-pulse {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    animation: expand-pulse 2s ease-out infinite;
+}
+
+@keyframes expand-pulse {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+    100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+.filter-tags-preview {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.preview-tag {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    animation: float-tag 3s ease-in-out infinite;
+}
+
+.preview-tag.interactive {
+    cursor: pointer;
+}
+
+.preview-tag.interactive:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-5px);
+}
+
+.preview-tag.active {
+    background: rgba(255, 215, 0, 0.3);
+    border-color: rgba(255, 215, 0, 0.5);
+    color: #ffd700;
+}
+
+.preview-tag:nth-child(1) { animation-delay: 0s; }
+.preview-tag:nth-child(2) { animation-delay: 0.5s; }
+.preview-tag:nth-child(3) { animation-delay: 1s; }
+.preview-tag:nth-child(4) { animation-delay: 1.5s; }
+
+@keyframes float-tag {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Modern Filter Container */
+.modern-filter-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    margin-bottom: 3rem;
+}
+
+/* Enhanced Search Section */
+.search-section {
+    margin-bottom: 2rem;
+}
+
+.search-input-container {
+    position: relative;
+}
+
+.search-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--bg-white);
+    border: 2px solid var(--border-gray);
+    border-radius: var(--border-radius-lg);
+    padding: 0.75rem 1rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.search-wrapper:focus-within {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgb(102 126 234 / 0.1);
+}
+
+.search-icon {
+    color: var(--text-light);
+    font-size: 1.25rem;
+    margin-right: 1rem;
+}
+
+.modern-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 1.125rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    background: transparent;
+}
+
+.modern-search-input::placeholder {
+    color: var(--text-light);
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-white);
+    border: 2px solid var(--border-gray);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: var(--shadow-lg);
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 1px solid var(--bg-gray-50);
+}
+
+.suggestion-item:hover {
+    background: var(--bg-gray-50);
+    color: var(--primary-blue);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-icon {
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+.suggestion-text {
+    flex: 1;
+}
+
+.suggestion-type {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.search-loading {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--primary-blue);
+    margin-right: 1rem;
+}
+
+.search-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: 1rem;
+}
+
+.search-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.875rem;
+}
+
+.search-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.search-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.search-btn.secondary {
+    background: var(--bg-gray-100);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-gray);
+}
+
+.search-btn.secondary:hover {
+    background: var(--bg-gray-50);
+    color: var(--text-primary);
+}
+
+.search-btn.voice {
+    background: var(--bg-white);
+    color: var(--primary-blue);
+    border: 2px solid var(--border-gray);
+    padding: 0.75rem;
+}
+
+.search-btn.voice:hover {
+    border-color: var(--primary-blue);
+    background: rgb(102 126 234 / 0.05);
+}
+
+.search-btn.voice.listening {
+    background: var(--gradient-danger);
+    color: white;
+    animation: pulse-recording 1s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Enhanced Cards */
+.active-filters-card,
+.quick-filters-card,
+.filter-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border-gray);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.active-filters-card:hover,
+.quick-filters-card:hover,
+.filter-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-1px);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, var(--bg-gray-50) 0%, var(--bg-white) 100%);
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.filter-icon,
+.lightning-icon {
+    color: var(--primary-blue);
+    font-size: 1.25rem;
+}
+
+.icon-wrapper {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.filter-count-badge {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-badge.inactive {
+    background: var(--bg-gray-100);
+    color: var(--text-secondary);
+}
+
+.status-badge.active {
+    background: var(--gradient-success);
+    color: white;
+}
+
+.clear-all-btn {
+    background: none;
+    border: 2px solid var(--border-gray);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.clear-all-btn:not(:disabled):hover {
+    border-color: var(--danger-red);
+    color: var(--danger-red);
+    background: rgb(239 68 68 / 0.05);
+}
+
+.clear-all-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Active Filters Content */
+.active-filters-content {
+    padding: 2rem;
+}
+
+.active-filters-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.no-filters-state {
+    text-align: center;
+    color: var(--text-light);
+    width: 100%;
+}
+
+.no-filters-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--text-light);
+}
+
+.no-filters-state p {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.no-filters-state small {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.active-filter-tag {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.remove-filter {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: var(--transition);
+}
+
+.remove-filter:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* Quick Filters Grid */
+.quick-filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 2rem;
+    transition: var(--transition);
+}
+
+.quick-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--bg-white);
+    border: 2px solid var(--border-gray);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: left;
+}
+
+.quick-filter-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.quick-filter-item.safe {
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.quick-filter-item.safe:hover {
+    border-color: var(--success-green);
+    background: rgb(16 185 129 / 0.05);
+}
+
+.quick-filter-item.unsafe {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.quick-filter-item.unsafe:hover {
+    border-color: var(--danger-red);
+    background: rgb(239 68 68 / 0.05);
+}
+
+.quick-filter-item.recent {
+    border-color: rgba(102, 126, 234, 0.3);
+}
+
+.quick-filter-item.recent:hover {
+    border-color: var(--primary-blue);
+    background: rgb(102 126 234 / 0.05);
+}
+
+.quick-filter-item.high-hpi {
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.quick-filter-item.high-hpi:hover {
+    border-color: var(--warning-orange);
+    background: rgb(245 158 11 / 0.05);
+}
+
+.filter-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.quick-filter-item.safe .filter-icon-wrapper {
+    background: var(--gradient-success);
+    color: white;
+}
+
+.quick-filter-item.unsafe .filter-icon-wrapper {
+    background: var(--gradient-danger);
+    color: white;
+}
+
+.quick-filter-item.recent .filter-icon-wrapper {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.quick-filter-item.high-hpi .filter-icon-wrapper {
+    background: var(--gradient-warning);
+    color: white;
+}
+
+.filter-content {
+    flex: 1;
+}
+
+.filter-title {
+    display: block;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.filter-content small {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.filter-arrow {
+    color: var(--text-light);
+    font-size: 1rem;
+}
+
+/* Expandable Cards */
+.card-header.expandable {
+    cursor: pointer;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.applied-count {
+    background: var(--bg-gray-100);
+    color: var(--text-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+}
+
+.expand-icon {
+    color: var(--text-light);
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.filter-card.expanded .expand-icon {
+    transform: rotate(180deg);
+}
+
+.card-content {
+    padding: 2rem;
+    display: none;
+}
+
+.filter-card.expanded .card-content {
+    display: block;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; max-height: 0; padding: 0 2rem; }
+    to { opacity: 1; max-height: 1000px; padding: 2rem; }
+}
+
+/* Filter Controls */
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modern-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.modern-label i {
+    color: var(--primary-blue);
+    font-size: 1.125rem;
+}
+
+/* Custom Select */
+.custom-select-wrapper {
+    position: relative;
+}
+
+.modern-select {
+    width: 100%;
+    background: var(--bg-white);
+    border: 2px solid var(--border-gray);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: var(--transition);
+    appearance: none;
+}
+
+.modern-select:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgb(102 126 234 / 0.1);
+}
+
+.select-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    pointer-events: none;
+}
+
+/* Date Inputs */
+.date-input-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.date-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.modern-date-input {
+    width: 100%;
+    background: var(--bg-white);
+    border: 2px solid var(--border-gray);
+    border-radius: var(--border-radius);
+    padding: 1rem 1.25rem 1rem 3rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+}
+
+.modern-date-input:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 4px rgb(102 126 234 / 0.1);
+}
+
+.date-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+}
+
+.date-separator {
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.date-presets,
+.hpi-presets {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.preset-chip {
+    background: var(--bg-gray-100);
+    border: 1px solid var(--border-gray);
+    color: var(--text-secondary);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.preset-chip:hover {
+    background: var(--primary-blue);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.preset-chip.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+}
+
+.preset-chip.safe {
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #059669;
+}
+
+.preset-chip.safe:hover {
+    background: var(--success-green);
+    color: white;
+    border-color: var(--success-green);
+}
+
+.preset-chip.moderate {
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #d97706;
+}
+
+.preset-chip.moderate:hover {
+    background: var(--warning-orange);
+    color: white;
+    border-color: var(--warning-orange);
+}
+
+.preset-chip.high {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+}
+
+.preset-chip.high:hover {
+    background: var(--danger-red);
+    color: white;
+    border-color: var(--danger-red);
+}
+
+/* Metal Items */
+.metals-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.metal-item {
+    background: var(--bg-gray-50);
+    border: 1px solid var(--border-gray);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    transition: var(--transition);
+}
+
+.metal-item.active {
+    border-color: var(--primary-blue);
+    background: rgb(102 126 234 / 0.05);
+}
+
+.metal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.element-badge {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 900;
+    font-size: 1.125rem;
+}
+
+.element-badge.lead {
+    background: var(--gradient-danger);
+}
+
+.element-badge.mercury {
+    background: var(--gradient-warning);
+}
+
+.element-badge.cadmium {
+    background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+}
+
+.element-badge.arsenic {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.metal-info {
+    flex: 1;
+}
+
+.metal-name {
+    display: block;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.metal-info small {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-gray-100);
+    border: 2px solid var(--border-gray);
+    transition: var(--transition);
+    border-radius: 28px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 2px;
+    bottom: 2px;
+    background: white;
+    transition: var(--transition);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
+.toggle-switch input:checked + .slider {
+    background: var(--gradient-primary);
+    border-color: var(--primary-blue);
+}
+
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+.range-inputs {
+    display: flex;
+    gap: 0.75rem;
+    opacity: 0.5;
+    transition: var(--transition);
+}
+
+.range-inputs.active {
+    opacity: 1;
+}
+
+.range-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid var(--border-gray);
+    border-radius: var(--border-radius);
+    font-weight: 500;
+    text-align: center;
+    transition: var(--transition);
+    background: var(--bg-white);
+}
+
+.range-input:focus {
+    border-color: var(--primary-blue);
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(102 126 234 / 0.1);
+}
+
+/* Range Slider */
+.range-slider-container {
+    margin: 1rem 0;
+}
+
+.dual-range-slider {
+    position: relative;
+    height: 20px;
+    margin: 2rem 0;
+}
+
+.range-min,
+.range-max {
+    position: absolute;
+    width: 100%;
+    height: 20px;
+    -webkit-appearance: none;
+    background: transparent;
+    pointer-events: none;
+}
+
+.range-min::-webkit-slider-thumb,
+.range-max::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    cursor: pointer;
+    pointer-events: auto;
+    border: 3px solid white;
+    box-shadow: var(--shadow-md);
+}
+
+.range-track {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 8px;
+    background: var(--bg-gray-100);
+    border-radius: 4px;
+}
+
+.range-fill {
+    position: absolute;
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.range-values {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Safety Checkboxes */
+.safety-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.safety-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    padding: 0.75rem;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+}
+
+.safety-checkbox:hover {
+    background: var(--bg-gray-50);
+}
+
+.safety-checkbox input {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-gray);
+    border-radius: 4px;
+    position: relative;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.safety-checkbox input:checked + .checkmark {
+    border-color: transparent;
+}
+
+.safety-checkbox input:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-weight: 900;
+    font-size: 0.875rem;
+}
+
+.checkmark.safe {
+    border-color: var(--success-green);
+}
+
+.safety-checkbox input:checked + .checkmark.safe {
+    background: var(--success-green);
+}
+
+.checkmark.unsafe {
+    border-color: var(--danger-red);
+}
+
+.safety-checkbox input:checked + .checkmark.unsafe {
+    background: var(--danger-red);
+}
+
+.safety-text {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Enhanced Action Bar */
+.action-bar {
+    background: var(--bg-white);
+    border: 1px solid var(--border-gray);
+    border-radius: var(--border-radius-lg);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    box-shadow: var(--shadow-lg);
+    position: sticky;
+    bottom: 1rem;
+    margin-top: 2rem;
+}
+
+.primary-actions,
+.secondary-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+    font-size: 0.875rem;
+}
+
+.action-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-xl);
+}
+
+.action-btn.secondary {
+    background: var(--bg-gray-100);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-gray);
+}
+
+.action-btn.secondary:hover {
+    background: var(--bg-gray-50);
+    color: var(--text-primary);
+    border-color: var(--text-secondary);
+}
+
+.action-btn.toggle {
+    background: var(--bg-white);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-gray);
+}
+
+.action-btn.toggle:hover {
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+.action-btn.toggle.auto-apply-on {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: var(--primary-blue);
+}
+
+.action-btn.export {
+    background: var(--bg-white);
+    color: var(--primary-blue);
+    border: 2px solid var(--border-gray);
+}
+
+.action-btn.export:hover {
+    border-color: var(--primary-blue);
+    background: rgb(102 126 234 / 0.05);
+}
+
+.filter-count-indicator {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--danger-red);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Results Section */
+.results-section {
+    background: var(--bg-white);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: 3rem;
+    margin-bottom: 3rem;
+}
+
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--bg-gray-50);
+}
+
+.results-info h3 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.results-count {
+    font-weight: 400;
+    color: var(--text-secondary);
+    font-size: 1.125rem;
+}
+
+.results-summary {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.summary-item.safe {
+    color: var(--success-green);
+}
+
+.summary-item.unsafe {
+    color: var(--danger-red);
+}
+
+.view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    background: var(--bg-gray-50);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+}
+
+.view-btn {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: none;
+    border-radius: calc(var(--border-radius) - 0.25rem);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-btn.active,
+.view-btn:hover {
+    background: var(--bg-white);
+    color: var(--primary-blue);
+    box-shadow: var(--shadow-sm);
+}
+
+/* View Containers */
+.view-container {
+    display: none;
+}
+
+.view-container.active {
+    display: block;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Table View */
+.table-wrapper {
+    background: var(--bg-gray-50);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.results-table thead {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.results-table th {
+    padding: 1.5rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.results-table td {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid var(--border-gray);
+    vertical-align: middle;
+}
+
+.results-table tbody tr:hover {
+    background: rgb(102 126 234 / 0.05);
+}
+
+/* Table Cell Styles */
+.sample-id {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.location-info i {
+    color: var(--danger-red);
+}
+
+.date-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.date-main {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.date-day {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.hpi-indicator {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    text-align: center;
+}
+
+.hpi-indicator.safe {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.hpi-indicator.high {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.hpi-indicator.critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.hpi-pending {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.metals-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.metal-item {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.metal-item.safe {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.metal-item.dangerous {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.safety-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.safety-badge.safe {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.safety-badge.unsafe {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-buttons .action-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    padding: 0;
+}
+
+.action-btn.view {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.action-btn.view:hover {
+    background: #2563eb;
+    color: white;
+    transform: scale(1.1);
+}
+
+.action-btn.export {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.action-btn.export:hover {
+    background: #d97706;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Cards View */
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.result-card {
+    background: var(--bg-white);
+    border: 2px solid var(--border-gray);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+}
+
+.result-card:hover {
+    border-color: rgba(102, 126, 234, 0.3);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.result-card .card-header {
+    background: var(--bg-gray-50);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-gray);
+}
+
+.card-id {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.safety-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.safety-icon.safe {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-green);
+}
+
+.safety-icon.unsafe {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-red);
+}
+
+.card-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-location i {
+    color: var(--danger-red);
+}
+
+.card-body {
+    padding: 2rem 1.5rem;
+}
+
+.hpi-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--bg-gray-50);
+    border-radius: var(--border-radius);
+}
+
+.hpi-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.hpi-value-large {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.hpi-value-large.safe { color: var(--success-green); }
+.hpi-value-large.high { color: var(--warning-orange); }
+.hpi-value-large.critical { color: var(--danger-red); }
+.hpi-value-large.pending { color: var(--text-secondary); }
+
+.metals-section h4 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.metals-list-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.metal-item-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: var(--bg-gray-50);
+    border-radius: var(--border-radius);
+}
+
+.metal-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.metal-value {
+    font-weight: 700;
+    font-family: monospace;
+}
+
+.metal-value.safe { color: var(--success-green); }
+.metal-value.dangerous { color: var(--danger-red); }
+
+.card-footer {
+    background: var(--bg-gray-50);
+    padding: 1.5rem;
+    border-top: 1px solid var(--border-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-date {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.card-action-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.card-action-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.card-action-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* No Results State */
+.no-results {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.no-results-icon i {
+    font-size: 5rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+}
+
+.no-results h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+}
+
+.no-results p {
+    font-size: 1.125rem;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.no-results-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.no-results-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.no-results-btn.primary {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.no-results-btn.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.no-results-btn.secondary {
+    background: var(--bg-gray-100);
+    color: var(--text-secondary);
+    border: 2px solid var(--border-gray);
+}
+
+.no-results-btn.secondary:hover {
+    background: var(--bg-gray-50);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .enhanced-filter-hero {
+        padding: 3rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .search-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .modern-filter-container {
+        padding: 1rem;
+    }
+    
+    .search-wrapper {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .search-actions {
+        margin-left: 0;
+        justify-content: stretch;
+    }
+    
+    .search-btn {
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .quick-filters-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .date-input-group {
+        flex-direction: column;
+    }
+    
+    .action-bar {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .primary-actions,
+    .secondary-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .cards-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .no-results-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+</style>
+
+<script>
+// Enhanced Interactive JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeEnhancedFilters();
+    setupEventListeners();
+    updateLiveStats();
+    switchView('table');
+    updateActiveFilters();
+});
+
+// Global variables
+let searchTimeout;
+let autoApplyEnabled = false;
+
+function initializeEnhancedFilters() {
+    // Initialize metal filter states
+    initializeMetalFilters();
+    
+    // Initialize HPI range sliders
+    updateHPIRangeSlider();
+    
+    // Update filter counts
+    updateAllFilterCounts();
+}
+
+function setupEventListeners() {
+    // Search input with auto-suggestions
+    const quickSearch = document.getElementById('quickSearch');
+    if (quickSearch) {
+        quickSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                handleSearchInput(this.value);
+            }, 300);
+        });
+        
+        quickSearch.addEventListener('focus', function() {
+            if (this.value.length > 0) {
+                showSearchSuggestions(this.value);
+            }
+        });
+        
+        quickSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performQuickSearch();
+            }
+        });
+    }
+    
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.search-input-wrapper')) {
+            hideSearchSuggestions();
+        }
+    });
+}
+
+// Interactive Search Functions
+function focusSearch() {
+    document.getElementById('quickSearch').focus();
+    animateSearchCircle();
+}
+
+function animateSearchCircle() {
+    const circle = document.querySelector('.search-circle');
+    const icon = document.getElementById('searchAnimationIcon');
+    
+    if (circle && icon) {
+        circle.classList.add('searching');
+        icon.className = 'fas fa-spinner fa-spin';
+        
+        setTimeout(() => {
+            circle.classList.remove('searching');
+            icon.className = 'fas fa-search';
+        }, 2000);
+    }
+}
+
+function handleSearchInput(value) {
+    const searchIcon = document.getElementById('searchAnimationIcon');
+    const loadingIndicator = document.getElementById('searchLoading');
+    
+    if (value.length > 0) {
+        if (searchIcon) searchIcon.className = 'fas fa-spinner fa-spin';
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+        
+        setTimeout(() => {
+            if (searchIcon) searchIcon.className = 'fas fa-search';
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            
+            if (value.length > 2) {
+                showSearchSuggestions(value);
+            }
+        }, 500);
+    } else {
+        hideSearchSuggestions();
+    }
+    
+    updateActiveFilters();
+}
+
+function showSearchSuggestions(query) {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (!suggestionsContainer) return;
+    
+    // Mock suggestions - replace with actual API call
+    const suggestions = [
+        { type: 'location', text: 'Industrial Zone A', icon: 'fas fa-map-marker-alt' },
+        { type: 'location', text: 'River Delta Area', icon: 'fas fa-water' },
+        { type: 'sample', text: 'Sample #123', icon: 'fas fa-flask' },
+        { type: 'filter', text: 'High lead levels', icon: 'fas fa-exclamation-triangle' },
+        { type: 'recent', text: 'Recent samples (7 days)', icon: 'fas fa-clock' }
+    ].filter(s => s.text.toLowerCase().includes(query.toLowerCase()));
+    
+    if (suggestions.length > 0) {
+        suggestionsContainer.innerHTML = suggestions.map(s => `
+            <div class="suggestion-item" onclick="applySuggestion('${s.text}', '${s.type}')">
+                <i class="${s.icon} suggestion-icon"></i>
+                <div class="suggestion-text">${s.text}</div>
+                <div class="suggestion-type">${s.type}</div>
+            </div>
+        `).join('');
+        suggestionsContainer.style.display = 'block';
+    } else {
+        hideSearchSuggestions();
+    }
+}
+
+function hideSearchSuggestions() {
+    const suggestionsContainer = document.getElementById('searchSuggestions');
+    if (suggestionsContainer) {
+        suggestionsContainer.style.display = 'none';
+    }
+}
+
+function applySuggestion(text, type) {
+    const searchInput = document.getElementById('quickSearch');
+    if (searchInput) {
+        searchInput.value = text;
+        hideSearchSuggestions();
+        
+        if (type === 'filter') {
+            // Apply specific filter logic here
+        } else {
+            performQuickSearch();
+        }
+    }
+}
+
+function performQuickSearch() {
+    const searchInput = document.getElementById('quickSearch');
+    const searchValue = searchInput ? searchInput.value.trim() : '';
+    
+    if (searchValue) {
+        const searchBtn = document.getElementById('searchBtn');
+        const btnText = searchBtn ? searchBtn.querySelector('.btn-text') : null;
+        
+        if (btnText) btnText.textContent = 'Searching...';
+        if (searchBtn) searchBtn.disabled = true;
+        
+        const url = new URL(window.location);
+        url.searchParams.set('q', searchValue);
+        
+        setTimeout(() => {
+            window.location.href = url.toString();
+        }, 500);
+    }
+}
+
+// Interactive Filter Tag Functions
+function quickFilterLocation() {
+    const tag = event.target.closest('.preview-tag');
+    toggleFilterTag(tag);
+    expandCard('locationSection');
+}
+
+function quickFilterDate() {
+    const tag = event.target.closest('.preview-tag');
+    toggleFilterTag(tag);
+    expandCard('locationSection');
+    setDateRange('week');
+}
+
+function quickFilterHPI() {
+    const tag = event.target.closest('.preview-tag');
+    toggleFilterTag(tag);
+    expandCard('hpiSection');
+    setHPIRange(50, 100);
+}
+
+function quickFilterSafety() {
+    const tag = event.target.closest('.preview-tag');
+    toggleFilterTag(tag);
+    expandCard('hpiSection');
+    const unsafeCheckbox = document.querySelector('input[value="not_drinkable"]');
+    if (unsafeCheckbox) {
+        unsafeCheckbox.checked = true;
+        updateSafetyFilter();
+    }
+}
+
+function toggleFilterTag(tag) {
+    if (tag) {
+        tag.classList.toggle('active');
+    }
+}
+
+function expandCard(cardId) {
+    const card = document.getElementById(cardId);
+    if (card && !card.classList.contains('expanded')) {
+        const header = card.querySelector('.card-header');
+        if (header) {
+            toggleCard(header);
+        }
+    }
+}
+
+// Quick Filter Functions
+function applyQuickFilter(type) {
+    const btn = event.target.closest('.quick-filter-item');
+    if (btn) {
+        btn.classList.add('active');
+        
+        switch(type) {
+            case 'safe':
+                const safeCheckbox = document.querySelector('input[value="drinkable"]');
+                if (safeCheckbox) {
+                    safeCheckbox.checked = true;
+                    expandCard('hpiSection');
+                    updateSafetyFilter();
+                }
+                break;
+            case 'unsafe':
+                const unsafeCheckbox = document.querySelector('input[value="not_drinkable"]');
+                if (unsafeCheckbox) {
+                    unsafeCheckbox.checked = true;
+                    expandCard('hpiSection');
+                    updateSafetyFilter();
+                }
+                break;
+            case 'recent':
+                expandCard('locationSection');
+                setDateRange('week');
+                break;
+            case 'high-hpi':
+                expandCard('hpiSection');
+                setHPIRange(100, 300);
+                break;
+        }
+        
+        if (autoApplyEnabled) {
+            applyFilters();
+        }
+        
+        setTimeout(() => {
+            btn.classList.remove('active');
+        }, 1000);
+    }
+}
+
+// Card Management Functions
+function toggleCard(header) {
+    const card = header.closest('.filter-card');
+    if (!card) return;
+    
+    const isExpanded = card.classList.contains('expanded');
+    
+    // Close all other cards
+    document.querySelectorAll('.filter-card').forEach(otherCard => {
+        if (otherCard !== card) {
+            otherCard.classList.remove('expanded');
+            updateCardStatus(otherCard, false);
+        }
+    });
+    
+    // Toggle current card
+    card.classList.toggle('expanded');
+    updateCardStatus(card, !isExpanded);
+    
+    updateAllFilterCounts();
+}
+
+function updateCardStatus(card, isActive) {
+    const statusBadge = card.querySelector('.status-badge');
+    if (statusBadge) {
+        if (isActive) {
+            statusBadge.textContent = 'ACTIVE';
+            statusBadge.classList.remove('inactive');
+            statusBadge.classList.add('active');
+        } else {
+            statusBadge.textContent = 'INACTIVE';
+            statusBadge.classList.remove('active');
+            statusBadge.classList.add('inactive');
+        }
+    }
+}
+
+// Metal Filter Functions
+function toggleMetalFilter(metal) {
+    const checkbox = document.getElementById(`enable${metal.charAt(0).toUpperCase() + metal.slice(1)}`);
+    const inputs = document.getElementById(`${metal}Inputs`);
+    const card = document.querySelector(`[data-metal="${metal}"]`);
+    
+    if (checkbox && inputs && card) {
+        if (checkbox.checked) {
+            inputs.classList.add('active');
+            card.classList.add('active');
+        } else {
+            inputs.classList.remove('active');
+            card.classList.remove('active');
+        }
+    }
+    
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+function updateMetalRange(metal) {
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+function initializeMetalFilters() {
+    ['lead', 'mercury', 'cadmium', 'arsenic'].forEach(metal => {
+        const checkbox = document.getElementById(`enable${metal.charAt(0).toUpperCase() + metal.slice(1)}`);
+        const inputs = document.getElementById(`${metal}Inputs`);
+        
+        if (checkbox && !checkbox.checked && inputs) {
+            inputs.classList.remove('active');
+        }
+    });
+}
+
+// Date Filter Functions
+function updateDateFilter() {
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+function updateLocationFilter() {
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+function setDateRange(range) {
+    const fromInput = document.getElementById('dateFrom');
+    const toInput = document.getElementById('dateTo');
+    
+    if (!fromInput || !toInput) return;
+    
+    const today = new Date();
+    let fromDate, toDate;
+    
+    switch (range) {
+        case 'today':
+            fromDate = today;
+            toDate = today;
+            break;
+        case 'week':
+            fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - 7);
+            toDate = today;
+            break;
+        case 'month':
+            fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            toDate = today;
+            break;
+        default:
+            return;
+    }
+    
+    fromInput.value = fromDate.toISOString().split('T')[0];
+    toInput.value = toDate.toISOString().split('T')[0];
+    
+    // Update preset button states
+    document.querySelectorAll('.date-presets .preset-chip').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+    
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+// HPI Filter Functions
+function updateHPIRange() {
+    const minInput = document.getElementById('hpiMin');
+    const maxInput = document.getElementById('hpiMax');
+    const minVal = document.getElementById('hpiMinVal');
+    const maxVal = document.getElementById('hpiMaxVal');
+    const rangeFill = document.getElementById('hpiRangeFill');
+    
+    if (minInput && maxInput && minVal && maxVal && rangeFill) {
+        const min = parseInt(minInput.value);
+        const max = parseInt(maxInput.value);
+        
+        minVal.textContent = min;
+        maxVal.textContent = max;
+        
+        // Update range fill
+        const leftPercent = (min / 300) * 100;
+        const rightPercent = (max / 300) * 100;
+        
+        rangeFill.style.left = leftPercent + '%';
+        rangeFill.style.width = (rightPercent - leftPercent) + '%';
+    }
+    
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+function updateHPIRangeSlider() {
+    updateHPIRange();
+}
+
+function setHPIRange(min, max) {
+    const minInput = document.getElementById('hpiMin');
+    const maxInput = document.getElementById('hpiMax');
+    
+    if (minInput && maxInput) {
+        minInput.value = min;
+        maxInput.value = max;
+        updateHPIRange();
+    }
+    
+    document.querySelectorAll('.hpi-presets .preset-chip').forEach(btn => btn.classList.remove('active'));
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+}
+
+// Safety Filter Functions
+function updateSafetyFilter() {
+    updateActiveFilters();
+    updateAllFilterCounts();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+// Active Filters Management
+function updateActiveFilters() {
+    const activeFiltersList = document.getElementById('activeFiltersList');
+    const activeFilterCount = document.getElementById('activeFilterCount');
+    const filterCountIndicator = document.getElementById('filterCountIndicator');
+    const clearAllBtn = document.getElementById('clearAllFiltersBtn');
+    const noFiltersState = document.getElementById('noFiltersState');
+    
+    if (!activeFiltersList) return;
+    
+    const filters = [];
+    
+    // Search filter
+    const searchValue = document.getElementById('quickSearch')?.value?.trim() || '';
+    if (searchValue) {
+        filters.push({
+            type: 'search',
+            label: `Search: "${searchValue}"`,
+            removable: true
+        });
+    }
+    
+    // Location filters
+    const locationSelect = document.getElementById('locationSelect');
+    if (locationSelect) {
+        const selectedOptions = Array.from(locationSelect.selectedOptions);
+        const selectedLocations = selectedOptions.map(option => option.value).filter(value => value !== '');
+        if (selectedLocations.length > 0) {
+            filters.push({
+                type: 'location',
+                label: `Location: ${selectedLocations.length === 1 ? selectedLocations[0] : selectedLocations.length + ' selected'}`,
+                removable: true
+            });
+        }
+    }
+    
+    // Date filters
+    const dateFrom = document.getElementById('dateFrom')?.value || '';
+    const dateTo = document.getElementById('dateTo')?.value || '';
+    if (dateFrom || dateTo) {
+        const fromText = dateFrom ? new Date(dateFrom).toLocaleDateString() : 'Any';
+        const toText = dateTo ? new Date(dateTo).toLocaleDateString() : 'Any';
+        filters.push({
+            type: 'date',
+            label: `Date: ${fromText} to ${toText}`,
+            removable: true
+        });
+    }
+    
+    // Metal filters
+    ['lead', 'mercury', 'cadmium', 'arsenic'].forEach(metal => {
+        const checkbox = document.getElementById(`enable${metal.charAt(0).toUpperCase() + metal.slice(1)}`);
+        if (checkbox && checkbox.checked) {
+            filters.push({
+                type: 'metal_' + metal,
+                label: `${metal.charAt(0).toUpperCase() + metal.slice(1)} Range`,
+                removable: true
+            });
+        }
+    });
+    
+    // HPI filter
+    const hpiMin = document.getElementById('hpiMin')?.value || '0';
+    const hpiMax = document.getElementById('hpiMax')?.value || '300';
+    if (hpiMin !== '0' || hpiMax !== '300') {
+        filters.push({
+            type: 'hpi',
+            label: `HPI: ${hpiMin} - ${hpiMax}`,
+            removable: true
+        });
+    }
+    
+    // Safety filters
+    const safetyFilters = document.querySelectorAll('input[name="safety_status"]:checked');
+    if (safetyFilters.length > 0) {
+        const statuses = Array.from(safetyFilters).map(cb => 
+            cb.value === 'drinkable' ? 'Safe' : 'Unsafe'
+        );
+        filters.push({
+            type: 'safety',
+            label: `Safety: ${statuses.join(', ')}`,
+            removable: true
+        });
+    }
+    
+    // Update display
+    if (filters.length === 0) {
+        activeFiltersList.innerHTML = '';
+        if (noFiltersState) {
+            activeFiltersList.appendChild(noFiltersState);
+        }
+        if (clearAllBtn) clearAllBtn.disabled = true;
+    } else {
+        if (noFiltersState && noFiltersState.parentNode) {
+            noFiltersState.remove();
+        }
+        activeFiltersList.innerHTML = filters.map(filter => `
+            <div class="active-filter-tag">
+                <span>${filter.label}</span>
+                ${filter.removable ? `<button class="remove-filter" onclick="removeFilter('${filter.type}')" type="button">
+                    <i class="fas fa-times"></i>
+                </button>` : ''}
+            </div>
+        `).join('');
+        if (clearAllBtn) clearAllBtn.disabled = false;
+    }
+    
+    // Update counts
+    if (activeFilterCount) activeFilterCount.textContent = filters.length;
+    if (filterCountIndicator) filterCountIndicator.textContent = filters.length;
+    
+    updateAllFilterCounts();
+}
+
+function removeFilter(type) {
+    switch(type) {
+        case 'search':
+            const searchInput = document.getElementById('quickSearch');
+            if (searchInput) searchInput.value = '';
+            break;
+        case 'location':
+            const locationSelect = document.getElementById('locationSelect');
+            if (locationSelect) {
+                Array.from(locationSelect.options).forEach(option => option.selected = false);
+            }
+            break;
+        case 'date':
+            const dateFrom = document.getElementById('dateFrom');
+            const dateTo = document.getElementById('dateTo');
+            if (dateFrom) dateFrom.value = '';
+            if (dateTo) dateTo.value = '';
+            break;
+        case 'hpi':
+            const hpiMin = document.getElementById('hpiMin');
+            const hpiMax = document.getElementById('hpiMax');
+            if (hpiMin) hpiMin.value = '0';
+            if (hpiMax) hpiMax.value = '300';
+            updateHPIRange();
+            break;
+        case 'safety':
+            document.querySelectorAll('input[name="safety_status"]').forEach(cb => cb.checked = false);
+            break;
+        default:
+            if (type.startsWith('metal_')) {
+                const metal = type.replace('metal_', '');
+                const checkbox = document.getElementById(`enable${metal.charAt(0).toUpperCase() + metal.slice(1)}`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                    toggleMetalFilter(metal);
+                }
+            }
+            break;
+    }
+    
+    updateActiveFilters();
+    
+    if (autoApplyEnabled) {
+        applyFilters();
+    }
+}
+
+function updateAllFilterCounts() {
+    // Update applied counts for each section
+    updateSectionCount('locationAppliedCount', 'locationSection');
+    updateSectionCount('metalAppliedCount', 'metalSection');
+    updateSectionCount('hpiAppliedCount', 'hpiSection');
+}
+
+function updateSectionCount(countElementId, sectionId) {
+    const countElement = document.getElementById(countElementId);
+    if (!countElement) return;
+    
+    let count = 0;
+    
+    switch(sectionId) {
+        case 'locationSection':
+            const locationSelect = document.getElementById('locationSelect');
+            if (locationSelect) {
+                count += Array.from(locationSelect.selectedOptions).filter(opt => opt.value !== '').length;
+            }
+            if (document.getElementById('dateFrom')?.value || document.getElementById('dateTo')?.value) {
+                count++;
+            }
+            break;
+        case 'metalSection':
+            count = ['lead', 'mercury', 'cadmium', 'arsenic'].filter(metal => 
+                document.getElementById(`enable${metal.charAt(0).toUpperCase() + metal.slice(1)}`)?.checked
+            ).length;
+            break;
+        case 'hpiSection':
+            const hpiMin = document.getElementById('hpiMin')?.value || '0';
+            const hpiMax = document.getElementById('hpiMax')?.value || '300';
+            if (hpiMin !== '0' || hpiMax !== '300') {
+                count++;
+            }
+            count += document.querySelectorAll('input[name="safety_status"]:checked').length;
+            break;
+    }
+    
+    countElement.textContent = count;
+}
+
+// Live Statistics Functions
+function updateLiveStats() {
+    // Simulate real-time data updates
+    const totalCount = document.getElementById('totalSamplesCount');
+    const filteredCount = document.getElementById('filteredCount');
+    const locationsCount = document.getElementById('locationsCount');
+    
+    // Animate numbers
+    if (totalCount) animateNumber(totalCount, parseInt(totalCount.textContent));
+    if (filteredCount) animateNumber(filteredCount, parseInt(filteredCount.textContent));
+    if (locationsCount) animateNumber(locationsCount, parseInt(locationsCount.textContent));
+}
+
+function animateNumber(element, target) {
+    const start = 0;
+    const duration = 1000;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(progress * target);
+        
+        element.textContent = current;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+function showAllSamples() {
+    clearAllFilters();
+}
+
+function showFilteredResults() {
+    const resultsSection = document.querySelector('.results-section');
+    if (resultsSection) {
+        resultsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function showLocationStats() {
+    alert('Location statistics would show detailed breakdown by location');
+}
+
+// Filter Actions
+function applyFilters() {
+    const applyBtn = document.querySelector('.action-btn.primary');
+    if (applyBtn) {
+        const originalText = applyBtn.innerHTML;
+        
+        applyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Applying...</span>';
+        applyBtn.disabled = true;
+        
+        // Submit form
+        setTimeout(() => {
+            document.getElementById('advancedFilterForm').submit();
+        }, 500);
+    }
+}
+
+function resetAllFilters() {
+    // Reset all form inputs
+    const form = document.getElementById('advancedFilterForm');
+    if (form) form.reset();
+    
+    const searchInput = document.getElementById('quickSearch');
+    if (searchInput) searchInput.value = '';
+    
+    // Reset metal toggles
+    ['lead', 'mercury', 'cadmium', 'arsenic'].forEach(metal => {
+        const checkbox = document.getElementById(`enable${metal.charAt(0).toUpperCase() + metal.slice(1)}`);
+        const inputs = document.getElementById(`${metal}Inputs`);
+        const card = document.querySelector(`[data-metal="${metal}"]`);
+        
+        if (checkbox) checkbox.checked = false;
+        if (inputs) inputs.classList.remove('active');
+        if (card) card.classList.remove('active');
+    });
+    
+    // Reset HPI range
+    const hpiMin = document.getElementById('hpiMin');
+    const hpiMax = document.getElementById('hpiMax');
+    if (hpiMin) hpiMin.value = '0';
+    if (hpiMax) hpiMax.value = '300';
+    updateHPIRange();
+    
+    // Reset filter tags
+    document.querySelectorAll('.preview-tag').forEach(tag => {
+        tag.classList.remove('active');
+    });
+    
+    // Reset preset buttons
+    document.querySelectorAll('.preset-chip').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    updateActiveFilters();
+}
+
+function clearAllFilters() {
+    resetAllFilters();
+    window.location.href = window.location.pathname;
+}
+
+function toggleAutoApply() {
+    const autoApplyBtn = document.getElementById('autoApplyBtn');
+    if (autoApplyBtn) {
+        autoApplyEnabled = !autoApplyEnabled;
+        
+        if (autoApplyEnabled) {
+            autoApplyBtn.querySelector('span').textContent = 'Auto Apply: ON';
+            autoApplyBtn.classList.remove('auto-apply-off');
+            autoApplyBtn.classList.add('auto-apply-on');
+        } else {
+            autoApplyBtn.querySelector('span').textContent = 'Auto Apply: OFF';
+            autoApplyBtn.classList.remove('auto-apply-on');
+            autoApplyBtn.classList.add('auto-apply-off');
+        }
+    }
+}
+
+function exportResults() {
+    const exportBtn = document.querySelector('.action-btn.export');
+    if (exportBtn) {
+        const originalText = exportBtn.innerHTML;
+        
+        exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Exporting...</span>';
+        exportBtn.disabled = true;
+        
+        // Simulate export process
+        setTimeout(() => {
+            alert('Export functionality would generate CSV/PDF with filtered results');
+            exportBtn.innerHTML = originalText;
+            exportBtn.disabled = false;
+        }, 2000);
+    }
+}
+
+// View Functions
+function switchView(viewType) {
+    // Update view buttons
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === viewType);
+    });
+    
+    // Update view containers
+    document.querySelectorAll('.view-container').forEach(container => {
+        container.classList.toggle('active', container.id === viewType + 'View');
+    });
+}
+
+// Voice Search Functions
+function toggleVoiceSearch() {
+    const voiceBtn = document.getElementById('voiceSearchBtn');
+    const voiceIcon = document.getElementById('voiceIcon');
+    
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onstart = () => {
+            if (voiceBtn) voiceBtn.classList.add('listening');
+            if (voiceIcon) voiceIcon.className = 'fas fa-stop';
+        };
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const searchInput = document.getElementById('quickSearch');
+            if (searchInput) {
+                searchInput.value = transcript;
+                performQuickSearch();
+            }
+        };
+        
+        recognition.onend = () => {
+            if (voiceBtn) voiceBtn.classList.remove('listening');
+            if (voiceIcon) voiceIcon.className = 'fas fa-microphone';
+        };
+        
+        recognition.onerror = () => {
+            if (voiceBtn) voiceBtn.classList.remove('listening');
+            if (voiceIcon) voiceIcon.className = 'fas fa-microphone';
+            alert('Voice recognition error occurred.');
+        };
+        
+        if (voiceBtn && voiceBtn.classList.contains('listening')) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+    } else {
+        alert('Voice recognition is not supported in this browser.');
+    }
+}
+
+// Utility Functions
+function exportSample(sampleId) {
+    alert(`Exporting sample #${sampleId} data...`);
+}
+</script>
+{% endblock %}

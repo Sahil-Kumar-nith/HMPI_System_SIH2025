@@ -1,0 +1,205 @@
+{% extends "hmpi_system_app/base.html" %}
+{% load json_script %}
+
+{% block title %}Interactive Maps - HMPI System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Interactive Contamination Maps</h1>
+    <p class="page-subtitle">Visualize heavy metal contamination patterns across geographic locations</p>
+</div>
+
+<div class="maps-navigation">
+    <div class="map-nav-buttons">
+        <button class="map-nav-btn active" onclick="showMap('overview', event)">
+            <i class="fas fa-globe-americas"></i> Overview Map
+        </button>
+        <button class="map-nav-btn" onclick="showMap('heatmap', event)">
+            <i class="fas fa-fire"></i> Heat Map
+        </button>
+        <button class="map-nav-btn" onclick="showMap('clusters', event)">
+            <i class="fas fa-layer-group"></i> Cluster Map
+        </button>
+        <button class="map-nav-btn" onclick="showMap('timeline', event)">
+            <i class="fas fa-clock"></i> Timeline Map
+        </button>
+        <button class="map-nav-btn" onclick="showMap('3d', event)">
+            <i class="fas fa-cube"></i> 3D Visualization
+        </button>
+    </div>
+</div>
+
+<div class="map-controls-panel">
+    <div class="control-group">
+        <label for="metalFilter">Filter by Metal:</label>
+        <select id="metalFilter" onchange="updateMapData()">
+            <option value="all">All Metals</option>
+            <option value="lead">Lead (Pb)</option>
+            <option value="mercury">Mercury (Hg)</option>
+            <option value="cadmium">Cadmium (Cd)</option>
+            <option value="arsenic">Arsenic (As)</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label for="levelFilter">Contamination Level:</label>
+        <select id="levelFilter" onchange="updateMapData()">
+            <option value="all">All Levels</option>
+            <option value="safe">Safe Levels</option>
+            <option value="warning">Warning Levels</option>
+            <option value="danger">Dangerous Levels</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>Date Range:</label>
+        <input type="date" id="startDate" onchange="updateMapData()" />
+        <input type="date" id="endDate" onchange="updateMapData()" />
+    </div>
+
+    <div class="control-group">
+        <button class="control-btn" onclick="exportMapData()"><i class="fas fa-download"></i> Export Data</button>
+        <button class="control-btn" onclick="fullscreenMap()"><i class="fas fa-expand"></i> Fullscreen</button>
+    </div>
+</div>
+
+<!-- Map containers -->
+<div id="overview-map" class="map-container active">
+    <div class="map-wrapper">
+        <div id="mainMap" class="interactive-map"></div>
+        <div class="map-legend">
+            <h4><i class="fas fa-info-circle"></i> Contamination Levels</h4>
+            <div class="legend-items">
+                <div class="legend-item"><div class="legend-color safe"></div>Safe (&lt; WHO limits)</div>
+                <div class="legend-item"><div class="legend-color warning"></div>Warning (Near limits)</div>
+                <div class="legend-item"><div class="legend-color danger"></div>Dangerous (&gt; WHO limits)</div>
+                <div class="legend-item"><div class="legend-color critical"></div>Critical (&gt;&gt; WHO limits)</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional map containers (heatmap, clusters, timeline, 3d) can be placed here -->
+
+<!-- Safe JSON embedding of sample data -->
+{{ samples|json_script:"sample-data" }}
+
+<!-- Leaflet CSS/JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const sampleData = JSON.parse(document.getElementById('sample-data').textContent);
+let currentFilters = { metal: 'all', level: 'all', startDate: null, endDate: null };
+let mainMap, markersLayer;
+
+function initOverviewMap() {
+    mainMap = L.map('mainMap').setView([20.5937, 78.9629], 5);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(mainMap);
+
+    markersLayer = L.layerGroup().addTo(mainMap);
+    updateOverviewMarkers();
+}
+
+function updateOverviewMarkers() {
+    markersLayer.clearLayers();
+
+    const filtered = sampleData.filter(sample => {
+        if(currentFilters.level !== 'all' && sample.contamination_level !== currentFilters.level) return false;
+        if(currentFilters.metal !== 'all' && !(sample[currentFilters.metal] > 0)) return false;
+        if(currentFilters.startDate && new Date(sample.date) < new Date(currentFilters.startDate)) return false;
+        if(currentFilters.endDate && new Date(sample.date) > new Date(currentFilters.endDate)) return false;
+        return true;
+    });
+
+    filtered.forEach(sample => {
+        if(sample.latitude && sample.longitude){
+            const colors = {safe:'#22c55e', warning:'#f59e0b', danger:'#ef4444', critical:'#dc2626'};
+            const color = colors[sample.contamination_level] || '#667eea';
+
+            const circle = L.circleMarker([sample.latitude, sample.longitude], {
+                radius: 8,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.8
+            });
+
+            const popupContent = `
+                <strong>${sample.location}</strong><br>
+                Sample #${sample.id} &bull; Date: ${sample.date}<br><br>
+                Lead: ${sample.lead.toFixed(4)} mg/L<br>
+                Mercury: ${sample.mercury.toFixed(4)} mg/L<br>
+                Cadmium: ${sample.cadmium.toFixed(4)} mg/L<br>
+                Arsenic: ${sample.arsenic.toFixed(4)} mg/L<br>
+                <b style="color: ${color}">Status: ${sample.contamination_level.toUpperCase()}</b>
+            `;
+
+            circle.bindPopup(popupContent);
+            circle.addTo(markersLayer);
+        }
+    });
+}
+
+function updateMapData() {
+    currentFilters.metal = document.getElementById('metalFilter').value;
+    currentFilters.level = document.getElementById('levelFilter').value;
+    currentFilters.startDate = document.getElementById('startDate').value || null;
+    currentFilters.endDate = document.getElementById('endDate').value || null;
+
+    if(mainMap) {
+        updateOverviewMarkers();
+    }
+}
+
+function showMap(mapId, event) {
+    document.querySelectorAll('.map-container').forEach(c => c.classList.remove('active'));
+    document.getElementById(mapId + '-map').classList.add('active');
+
+    document.querySelectorAll('.map-nav-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    if(mapId === 'overview' && !mainMap){
+        initOverviewMap();
+    }
+    // Initialize other maps as needed
+}
+
+function exportMapData() {
+    alert('Export feature coming soon.');
+}
+
+function fullscreenMap() {
+    const container = document.querySelector('.map-container.active .interactive-map');
+    if(container.requestFullscreen){
+        container.requestFullscreen();
+    }
+}
+
+// Initialize the map on page load
+document.addEventListener('DOMContentLoaded', () => {
+    initOverviewMap();
+});
+</script>
+
+<style>
+/* Minimal styles for map container and navigation (can be enhanced as needed) */
+.map-container {
+    display: none;
+    margin-bottom: 1.5rem;
+}
+.map-container.active {
+    display: block;
+}
+.interactive-map {
+    width: 100%;
+    height: 600px;
+    border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.15);
+}
+</style>
+
+{% endblock %}

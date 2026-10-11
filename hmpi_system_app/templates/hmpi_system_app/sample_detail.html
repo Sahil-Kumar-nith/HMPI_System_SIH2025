@@ -1,0 +1,41 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block content %}
+<div class="card bg-white bg-opacity-90 rounded-4 shadow-lg p-5 mx-auto" style="max-width: 700px;">
+    <h2 class="text-primary fw-bold mb-4 text-center">Sample Detail</h2>
+    <dl class="row fs-5">
+        <dt class="col-sm-4">Location</dt>
+        <dd class="col-sm-8">{{ sample.location }}</dd>
+
+        <dt class="col-sm-4">Date</dt>
+        <dd class="col-sm-8">{{ sample.date }}</dd>
+
+        <dt class="col-sm-4">Latitude/Longitude</dt>
+        <dd class="col-sm-8">{{ sample.latitude }}, {{ sample.longitude }}</dd>
+
+        <dt class="col-sm-4">Lead (mg/L)</dt>
+        <dd class="col-sm-8">{{ sample.lead }}</dd>
+
+        <dt class="col-sm-4">Mercury (mg/L)</dt>
+        <dd class="col-sm-8">{{ sample.mercury }}</dd>
+
+        <dt class="col-sm-4">Cadmium (mg/L)</dt>
+        <dd class="col-sm-8">{{ sample.cadmium }}</dd>
+
+        <dt class="col-sm-4">Arsenic (mg/L)</dt>
+        <dd class="col-sm-8">{{ sample.arsenic }}</dd>
+
+        <dt class="col-sm-4">HPI</dt>
+        <dd class="col-sm-8">
+            <span class="badge {% if sample.hpi > 100 %}bg-danger{% else %}bg-success{% endif %} fs-5">
+                {{ sample.hpi }}
+            </span>
+        </dd>
+    </dl>
+    <div class="text-end mt-4">
+        <a href="{% url 'sample_list' %}" class="btn btn-primary rounded-pill px-4">
+            <i class="fas fa-arrow-left"></i> Back to Samples
+        </a>
+    </div>
+</div>
+{% endblock %}

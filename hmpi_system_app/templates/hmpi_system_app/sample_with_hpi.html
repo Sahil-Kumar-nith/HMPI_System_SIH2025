@@ -1,0 +1,3561 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}HPI Analysis Dashboard - HMPI System{% endblock %}
+
+{% block content %}
+<!-- Hero Section with HPI Branding -->
+<div class="hpi-hero-section">
+    <div class="hero-background">
+        <div class="particle-system">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-main">
+            <div class="hero-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Heavy Metal Pollution Index</span>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-primary">HPI Analysis</span>
+                <span class="title-secondary">Dashboard</span>
+            </h1>
+            <p class="hero-description">
+                Comprehensive Heavy Metal Pollution Index calculation and analysis with advanced visualization, 
+                risk assessment, and environmental safety monitoring capabilities.
+            </p>
+            <div class="hero-actions">
+                <button class="hero-btn primary" onclick="scrollToAnalysis()">
+                    <i class="fas fa-chart-line"></i> Start Analysis
+                </button>
+                <button class="hero-btn secondary" onclick="downloadReport()">
+                    <i class="fas fa-file-pdf"></i> Generate Report
+                </button>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hpi-gauge-container">
+                <div class="main-hpi-gauge">
+                    <div class="gauge-outer">
+                        <div class="gauge-inner">
+                            <div class="gauge-needle" style="transform: rotate({{ overall_hpi_angle|default:'45' }}deg);"></div>
+                            <div class="gauge-center">
+                                <div class="hpi-value">{{ overall_hpi|default:'42.3' }}</div>
+                                <div class="hpi-label">Overall HPI</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gauge-scale">
+                        <span class="scale-mark safe">0</span>
+                        <span class="scale-mark moderate">50</span>
+                        <span class="scale-mark high">100</span>
+                        <span class="scale-mark critical">150+</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HPI Statistics Dashboard -->
+<div class="hpi-stats-dashboard">
+    <div class="stats-header">
+        <h2><i class="fas fa-analytics"></i> HPI Statistics Overview</h2>
+        <div class="stats-period">
+            <button class="period-btn active" data-period="today">Today</button>
+            <button class="period-btn" data-period="week">This Week</button>
+            <button class="period-btn" data-period="month">This Month</button>
+            <button class="period-btn" data-period="year">This Year</button>
+        </div>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card gradient-blue">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+5.2%</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ total_samples|default:'156' }}</div>
+                <div class="stat-label">Total Samples Analyzed</div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 78%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card gradient-green">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+2.1%</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ safe_samples|default:'89' }}</div>
+                <div class="stat-label">Safe HPI Levels</div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 57%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card gradient-orange">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-trend down">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>-1.8%</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ moderate_samples|default:'43' }}</div>
+                <div class="stat-label">Moderate Risk Levels</div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 28%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card gradient-red">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+0.9%</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ high_risk_samples|default:'24' }}</div>
+                <div class="stat-label">High Risk Samples</div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 15%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card gradient-purple">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="stat-trend neutral">
+                    <i class="fas fa-minus"></i>
+                    <span>0.0%</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ average_hpi|default:'42.7' }}</div>
+                <div class="stat-label">Average HPI Score</div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 43%;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card gradient-teal">
+            <div class="stat-header">
+                <div class="stat-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <div class="stat-trend up">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>+3.4%</span>
+                </div>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ monitored_locations|default:'23' }}</div>
+                <div class="stat-label">Monitored Locations</div>
+                <div class="stat-progress">
+                    <div class="progress-bar" style="width: 85%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive HPI Analysis Controls -->
+<div class="hpi-controls-panel" id="analysisSection">
+    <div class="controls-header">
+        <h2><i class="fas fa-sliders-h"></i> HPI Analysis Controls</h2>
+        <div class="controls-actions">
+            <button class="control-action-btn" onclick="resetFilters()">
+                <i class="fas fa-undo"></i> Reset Filters
+            </button>
+            <button class="control-action-btn" onclick="exportData()">
+                <i class="fas fa-download"></i> Export Data
+            </button>
+        </div>
+    </div>
+    
+    <div class="controls-content">
+        <div class="filter-section">
+            <h3><i class="fas fa-filter"></i> Data Filters</h3>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label>HPI Range</label>
+                    <div class="range-slider">
+                        <input type="range" id="hpiMin" min="0" max="200" value="0" class="slider">
+                        <input type="range" id="hpiMax" min="0" max="200" value="200" class="slider">
+                        <div class="range-values">
+                            <span id="hpiMinValue">0</span> - <span id="hpiMaxValue">200</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Date Range</label>
+                    <div class="date-inputs">
+                        <input type="date" id="startDate" class="date-input">
+                        <input type="date" id="endDate" class="date-input">
+                    </div>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Location Filter</label>
+                    <select id="locationFilter" class="select-input">
+                        <option value="">All Locations</option>
+                        {% for location in unique_locations %}
+                        <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Risk Level</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked> <span class="checkmark safe"></span> Safe (0-50)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked> <span class="checkmark moderate"></span> Moderate (51-100)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked> <span class="checkmark high"></span> High (101-200)
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" checked> <span class="checkmark critical"></span> Critical (200+)
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="view-section">
+            <h3><i class="fas fa-eye"></i> Visualization Options</h3>
+            <div class="view-buttons">
+                <button class="view-btn active" data-view="table">
+                    <i class="fas fa-table"></i> Table View
+                </button>
+                <button class="view-btn" data-view="grid">
+                    <i class="fas fa-th"></i> Grid View
+                </button>
+                <button class="view-btn" data-view="chart">
+                    <i class="fas fa-chart-bar"></i> Chart View
+                </button>
+                <button class="view-btn" data-view="map">
+                    <i class="fas fa-map"></i> Map View
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Enhanced HPI Data Visualization -->
+<div class="hpi-visualization-container">
+    <!-- Table View -->
+    <div class="view-container active" id="tableView">
+        <div class="table-container">
+            <div class="table-header">
+                <h3><i class="fas fa-table"></i> Detailed HPI Analysis</h3>
+                <div class="table-actions">
+                    <button class="table-action-btn" onclick="sortTable()">
+                        <i class="fas fa-sort"></i> Sort
+                    </button>
+                    <button class="table-action-btn" onclick="toggleCompare()">
+                        <i class="fas fa-balance-scale"></i> Compare
+                    </button>
+                </div>
+            </div>
+            
+            <div class="enhanced-table-wrapper">
+                <table class="hpi-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-sort="id">
+                                <div class="th-content">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>Sample ID</span>
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-sort="location">
+                                <div class="th-content">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Location</span>
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="sortable" data-sort="date">
+                                <div class="th-content">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>Date</span>
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </div>
+                            </th>
+                            <th class="metal-column">
+                                <div class="th-content">
+                                    <i class="fas fa-atom"></i>
+                                    <span>Heavy Metals</span>
+                                </div>
+                            </th>
+                            <th class="sortable" data-sort="hpi">
+                                <div class="th-content">
+                                    <i class="fas fa-calculator"></i>
+                                    <span>HPI Score</span>
+                                    <i class="fas fa-sort sort-icon"></i>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Risk Level</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="th-content">
+                                    <i class="fas fa-tools"></i>
+                                    <span>Actions</span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="hpiTableBody">
+                        {% for sample in sample_with_hpi_list %}
+                        <tr class="sample-row" data-hpi="{{ sample.hpi_score }}" data-location="{{ sample.location }}">
+                            <td class="id-column">
+                                <div class="sample-id">
+                                    <span class="id-badge">#{{ sample.id }}</span>
+                                </div>
+                            </td>
+                            <td class="location-column">
+                                <div class="location-info">
+                                    <i class="fas fa-map-pin location-pin"></i>
+                                    <div class="location-details">
+                                        <span class="location-name">{{ sample.location }}</span>
+                                        {% if sample.latitude and sample.longitude %}
+                                        <span class="coordinates">{{ sample.latitude|floatformat:3 }}, {{ sample.longitude|floatformat:3 }}</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="date-column">
+                                <div class="date-info">
+                                    <div class="date-main">{{ sample.date|date:"M d, Y" }}</div>
+                                    <div class="date-time">{{ sample.date|date:"H:i" }}</div>
+                                </div>
+                            </td>
+                            <td class="metals-column">
+                                <div class="metals-grid">
+                                    <div class="metal-item">
+                                        <span class="metal-symbol">Pb</span>
+                                        <span class="metal-value {% if sample.lead > 0.01 %}danger{% else %}safe{% endif %}">
+                                            {{ sample.lead|floatformat:3 }}
+                                        </span>
+                                        <div class="metal-bar">
+                                            <div class="bar-fill" style="width: {% widthratio sample.lead 0.02 100 %}%; background: {% if sample.lead > 0.01 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metal-item">
+                                        <span class="metal-symbol">Hg</span>
+                                        <span class="metal-value {% if sample.mercury > 0.006 %}danger{% else %}safe{% endif %}">
+                                            {{ sample.mercury|floatformat:3 }}
+                                        </span>
+                                        <div class="metal-bar">
+                                            <div class="bar-fill" style="width: {% widthratio sample.mercury 0.012 100 %}%; background: {% if sample.mercury > 0.006 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metal-item">
+                                        <span class="metal-symbol">Cd</span>
+                                        <span class="metal-value {% if sample.cadmium > 0.003 %}danger{% else %}safe{% endif %}">
+                                            {{ sample.cadmium|floatformat:3 }}
+                                        </span>
+                                        <div class="metal-bar">
+                                            <div class="bar-fill" style="width: {% widthratio sample.cadmium 0.006 100 %}%; background: {% if sample.cadmium > 0.003 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metal-item">
+                                        <span class="metal-symbol">As</span>
+                                        <span class="metal-value {% if sample.arsenic > 0.01 %}danger{% else %}safe{% endif %}">
+                                            {{ sample.arsenic|floatformat:3 }}
+                                        </span>
+                                        <div class="metal-bar">
+                                            <div class="bar-fill" style="width: {% widthratio sample.arsenic 0.02 100 %}%; background: {% if sample.arsenic > 0.01 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="hpi-column">
+                                <div class="hpi-score-container">
+                                    <div class="hpi-score {% if sample.hpi_score > 100 %}high{% elif sample.hpi_score > 50 %}moderate{% else %}safe{% endif %}">
+                                        {{ sample.hpi_score|floatformat:1 }}
+                                    </div>
+                                    <div class="hpi-bar">
+                                        <div class="hpi-fill" style="width: {% widthratio sample.hpi_score 200 100 %}%;"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="risk-column">
+                                <div class="risk-badge {% if sample.hpi_score > 200 %}critical{% elif sample.hpi_score > 100 %}high{% elif sample.hpi_score > 50 %}moderate{% else %}safe{% endif %}">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>
+                                        {% if sample.hpi_score > 200 %}Critical
+                                        {% elif sample.hpi_score > 100 %}High Risk
+                                        {% elif sample.hpi_score > 50 %}Moderate
+                                        {% else %}Safe
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="actions-column">
+                                <div class="action-buttons">
+                                    <button class="action-btn view-details" onclick="viewSampleDetails({{ sample.id }})" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="action-btn compare-sample" onclick="addToCompare({{ sample.id }})" title="Add to Compare">
+                                        <i class="fas fa-balance-scale"></i>
+                                    </button>
+                                    <button class="action-btn share-sample" onclick="shareSample({{ sample.id }})" title="Share Sample">
+                                        <i class="fas fa-share-alt"></i>
+                                    </button>
+                                    <button class="action-btn download-report" onclick="downloadSampleReport({{ sample.id }})" title="Download Report">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div class="view-container" id="gridView">
+        <div class="grid-container">
+            <div class="samples-grid">
+                {% for sample in sample_with_hpi_list %}
+                <div class="sample-card advanced" data-hpi="{{ sample.hpi_score }}">
+                    <div class="card-header">
+                        <div class="card-id-section">
+                            <span class="sample-id-badge">#{{ sample.id }}</span>
+                            <div class="hpi-indicator {% if sample.hpi_score > 100 %}high{% elif sample.hpi_score > 50 %}moderate{% else %}safe{% endif %}">
+                                {{ sample.hpi_score|floatformat:1 }}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="card-action-btn" onclick="viewSampleDetails({{ sample.id }})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="card-action-btn" onclick="addToCompare({{ sample.id }})">
+                                <i class="fas fa-balance-scale"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content">
+                        <div class="location-section">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <div class="location-text">
+                                <span class="location-name">{{ sample.location }}</span>
+                                <span class="sample-date">{{ sample.date|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="metals-section">
+                            <h4>Heavy Metal Concentrations</h4>
+                            <div class="metals-chart">
+                                <div class="metal-bar-chart">
+                                    <div class="metal-bar-item">
+                                        <span class="metal-label">Pb</span>
+                                        <div class="metal-progress">
+                                            <div class="progress-fill" style="width: {% widthratio sample.lead 0.02 100 %}%; background: {% if sample.lead > 0.01 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                        <span class="metal-val">{{ sample.lead|floatformat:3 }}</span>
+                                    </div>
+                                    <div class="metal-bar-item">
+                                        <span class="metal-label">Hg</span>
+                                        <div class="metal-progress">
+                                            <div class="progress-fill" style="width: {% widthratio sample.mercury 0.012 100 %}%; background: {% if sample.mercury > 0.006 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                        <span class="metal-val">{{ sample.mercury|floatformat:3 }}</span>
+                                    </div>
+                                    <div class="metal-bar-item">
+                                        <span class="metal-label">Cd</span>
+                                        <div class="metal-progress">
+                                            <div class="progress-fill" style="width: {% widthratio sample.cadmium 0.006 100 %}%; background: {% if sample.cadmium > 0.003 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                        <span class="metal-val">{{ sample.cadmium|floatformat:3 }}</span>
+                                    </div>
+                                    <div class="metal-bar-item">
+                                        <span class="metal-label">As</span>
+                                        <div class="metal-progress">
+                                            <div class="progress-fill" style="width: {% widthratio sample.arsenic 0.02 100 %}%; background: {% if sample.arsenic > 0.01 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                                        </div>
+                                        <span class="metal-val">{{ sample.arsenic|floatformat:3 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="risk-assessment-section">
+                            <div class="risk-header">
+                                <span>Risk Assessment</span>
+                                <div class="risk-status {% if sample.hpi_score > 100 %}high{% elif sample.hpi_score > 50 %}moderate{% else %}safe{% endif %}">
+                                    {% if sample.hpi_score > 200 %}Critical Risk
+                                    {% elif sample.hpi_score > 100 %}High Risk
+                                    {% elif sample.hpi_score > 50 %}Moderate Risk
+                                    {% else %}Safe Level
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="risk-gauge-mini">
+                                <div class="gauge-track">
+                                    <div class="gauge-progress" style="width: {% widthratio sample.hpi_score 200 100 %}%;"></div>
+                                </div>
+                                <div class="gauge-labels">
+                                    <span>0</span>
+                                    <span>50</span>
+                                    <span>100</span>
+                                    <span>200+</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-footer">
+                        <button class="card-btn primary" onclick="viewSampleDetails({{ sample.id }})">
+                            <i class="fas fa-chart-line"></i>
+                            Detailed Analysis
+                        </button>
+                        <button class="card-btn secondary" onclick="downloadSampleReport({{ sample.id }})">
+                            <i class="fas fa-download"></i>
+                            Report
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart View -->
+    <div class="view-container" id="chartView">
+        <div class="charts-container">
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3><i class="fas fa-chart-bar"></i> HPI Distribution Analysis</h3>
+                    <div class="chart-controls">
+                        <select class="chart-selector">
+                            <option value="distribution">HPI Distribution</option>
+                            <option value="timeline">Timeline Analysis</option>
+                            <option value="comparison">Metal Comparison</option>
+                            <option value="correlation">Correlation Matrix</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    {% if hpi_chart %}
+                        {{ hpi_chart|safe }}
+                    {% else %}
+                        <div class="chart-placeholder">
+                            <i class="fas fa-chart-bar"></i>
+                            <h4>Loading HPI Analysis Chart...</h4>
+                            <div class="loading-animation">
+                                <div class="loading-bar"></div>
+                                <div class="loading-bar"></div>
+                                <div class="loading-bar"></div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map View -->
+    <div class="view-container" id="mapView">
+        <div class="map-container enhanced">
+            <div class="map-header">
+                <h3><i class="fas fa-globe-americas"></i> Geographic HPI Distribution</h3>
+                <div class="map-controls">
+                    <select class="map-style-selector">
+                        <option value="terrain">Terrain</option>
+                        <option value="satellite">Satellite</option>
+                        <option value="street">Street Map</option>
+                    </select>
+                    <button class="map-control-btn" onclick="toggleHeatmap()">
+                        <i class="fas fa-fire"></i> Heatmap
+                    </button>
+                    <button class="map-control-btn" onclick="toggleClusters()">
+                        <i class="fas fa-layer-group"></i> Clusters
+                    </button>
+                </div>
+            </div>
+            <div class="map-content">
+                {% if hpi_map %}
+                    {{ hpi_map|safe }}
+                {% else %}
+                    <div class="map-placeholder">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <h4>Loading Interactive HPI Map...</h4>
+                        <p>Preparing geographic visualization of heavy metal pollution data</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HPI Calculation Methodology Panel -->
+<div class="methodology-panel">
+    <div class="methodology-header">
+        <h2><i class="fas fa-calculator"></i> HPI Calculation Methodology</h2>
+        <button class="methodology-toggle" onclick="toggleMethodology()">
+            <i class="fas fa-chevron-down"></i>
+        </button>
+    </div>
+    <div class="methodology-content" style="display: none;">
+        <div class="methodology-grid">
+            <div class="methodology-card">
+                <h3><i class="fas fa-formula"></i> HPI Formula</h3>
+                <div class="formula-container">
+                    <div class="formula">
+                        HPI = Σ(Wi × Qi) / Σ(Wi)
+                    </div>
+                    <div class="formula-explanation">
+                        <p><strong>Where:</strong></p>
+                        <ul>
+                            <li><strong>Wi</strong> = Relative weight of each heavy metal</li>
+                            <li><strong>Qi</strong> = Quality rating for each metal</li>
+                            <li><strong>Σ</strong> = Summation over all metals</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="methodology-card">
+                <h3><i class="fas fa-weight-hanging"></i> Metal Weights</h3>
+                <div class="weights-table">
+                    <div class="weight-item">
+                        <span class="metal-name">Lead (Pb)</span>
+                        <span class="weight-value">4.0</span>
+                        <div class="weight-bar">
+                            <div class="weight-fill" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                    <div class="weight-item">
+                        <span class="metal-name">Mercury (Hg)</span>
+                        <span class="weight-value">5.0</span>
+                        <div class="weight-bar">
+                            <div class="weight-fill" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                    <div class="weight-item">
+                        <span class="metal-name">Cadmium (Cd)</span>
+                        <span class="weight-value">4.5</span>
+                        <div class="weight-bar">
+                            <div class="weight-fill" style="width: 90%;"></div>
+                        </div>
+                    </div>
+                    <div class="weight-item">
+                        <span class="metal-name">Arsenic (As)</span>
+                        <span class="weight-value">4.2</span>
+                        <div class="weight-bar">
+                            <div class="weight-fill" style="width: 84%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="methodology-card">
+                <h3><i class="fas fa-thermometer-half"></i> Risk Categories</h3>
+                <div class="risk-categories">
+                    <div class="category-item safe">
+                        <div class="category-indicator"></div>
+                        <div class="category-info">
+                            <span class="category-name">Safe</span>
+                            <span class="category-range">0 - 50</span>
+                        </div>
+                    </div>
+                    <div class="category-item moderate">
+                        <div class="category-indicator"></div>
+                        <div class="category-info">
+                            <span class="category-name">Moderate</span>
+                            <span class="category-range">51 - 100</span>
+                        </div>
+                    </div>
+                    <div class="category-item high">
+                        <div class="category-indicator"></div>
+                        <div class="category-info">
+                            <span class="category-name">High Risk</span>
+                            <span class="category-range">101 - 200</span>
+                        </div>
+                    </div>
+                    <div class="category-item critical">
+                        <div class="category-indicator"></div>
+                        <div class="category-info">
+                            <span class="category-name">Critical</span>
+                            <span class="category-range">200+</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sample Comparison Panel -->
+<div class="comparison-panel" id="comparisonPanel" style="display: none;">
+    <div class="comparison-header">
+        <h2><i class="fas fa-balance-scale"></i> Sample Comparison</h2>
+        <button class="close-comparison" onclick="closeComparison()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <div class="comparison-content">
+        <div class="comparison-samples" id="comparisonSamples">
+            <!-- Comparison samples will be added here dynamically -->
+        </div>
+        <div class="comparison-chart" id="comparisonChart">
+            <div class="chart-placeholder">
+                <i class="fas fa-chart-radar"></i>
+                <p>Select samples to compare their HPI scores and metal concentrations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhanced CSS Variables */
+:root {
+    --hpi-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --hpi-success: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --hpi-warning: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    --hpi-danger: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    --hpi-info: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --hpi-dark: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%);
+    
+    --gradient-blue: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-green: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    --gradient-orange: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    --gradient-red: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    --gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-teal: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.25);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.12);
+    --shadow-strong: 0 20px 60px rgba(0, 0, 0, 0.25);
+    --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
+    
+    --border-radius: 12px;
+    --border-radius-lg: 20px;
+    --border-radius-xl: 28px;
+    
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    --font-size-4xl: 2.25rem;
+}
+
+/* Hero Section Styles */
+.hpi-hero-section {
+    position: relative;
+    background: var(--hpi-primary);
+    border-radius: var(--border-radius-xl);
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    overflow: hidden;
+    min-height: 500px;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.particle-system {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.particle {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    animation: float-particle 8s ease-in-out infinite;
+}
+
+.particle:nth-child(1) {
+    width: 80px;
+    height: 80px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    width: 60px;
+    height: 60px;
+    top: 60%;
+    left: 80%;
+    animation-delay: 2s;
+}
+
+.particle:nth-child(3) {
+    width: 120px;
+    height: 120px;
+    top: 10%;
+    left: 70%;
+    animation-delay: 4s;
+}
+
+.particle:nth-child(4) {
+    width: 40px;
+    height: 40px;
+    top: 80%;
+    left: 20%;
+    animation-delay: 1s;
+}
+
+.particle:nth-child(5) {
+    width: 100px;
+    height: 100px;
+    top: 40%;
+    left: 50%;
+    animation-delay: 3s;
+}
+
+@keyframes float-particle {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+        opacity: 0.3;
+    }
+    50% {
+        transform: translateY(-30px) rotate(180deg);
+        opacity: 0.7;
+    }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3rem;
+    color: white;
+}
+
+.hero-main {
+    flex: 1;
+    max-width: 600px;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius-lg);
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: var(--font-size-sm);
+}
+
+.hero-title {
+    font-size: var(--font-size-4xl);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+}
+
+.title-primary {
+    display: block;
+    background: linear-gradient(45deg, #fff, #e3f2fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.title-secondary {
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.hero-description {
+    font-size: var(--font-size-lg);
+    line-height: 1.7;
+    opacity: 0.9;
+    margin-bottom: 2.5rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.hero-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.hero-btn.primary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.hero-btn.primary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-strong);
+}
+
+.hero-btn.secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.hero-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+/* HPI Gauge Styles */
+.hero-visual {
+    flex-shrink: 0;
+}
+
+.hpi-gauge-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-hpi-gauge {
+    position: relative;
+}
+
+.gauge-outer {
+    width: 250px;
+    height: 250px;
+    background: conic-gradient(
+        from 180deg,
+        #22c55e 0deg 90deg,
+        #f59e0b 90deg 180deg,
+        #ef4444 180deg 270deg,
+        #dc2626 270deg 360deg
+    );
+    border-radius: 50%;
+    padding: 20px;
+    position: relative;
+    animation: gauge-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes gauge-glow {
+    0% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+    100% { box-shadow: 0 0 40px rgba(255, 255, 255, 0.6); }
+}
+
+.gauge-inner {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gauge-needle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 80px;
+    background: white;
+    transform-origin: bottom center;
+    transform: translate(-50%, -80px) rotate(45deg);
+    border-radius: 2px;
+    z-index: 10;
+    box-shadow: var(--shadow-soft);
+    transition: transform 2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gauge-center {
+    text-align: center;
+    z-index: 5;
+}
+
+.hpi-value {
+    font-size: var(--font-size-3xl);
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.hpi-label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: white;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.gauge-scale {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: white;
+}
+
+.scale-mark {
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+}
+
+.scale-mark.safe { color: #22c55e; }
+.scale-mark.moderate { color: #f59e0b; }
+.scale-mark.high { color: #ef4444; }
+.scale-mark.critical { color: #dc2626; }
+
+/* Statistics Dashboard */
+.hpi-stats-dashboard {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    padding: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stats-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.stats-header h2 {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0;
+}
+
+.stats-period {
+    display: flex;
+    gap: 0.5rem;
+    background: #f3f4f6;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+}
+
+.period-btn {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    color: #6b7280;
+}
+
+.period-btn:hover,
+.period-btn.active {
+    background: white;
+    color: #374151;
+    box-shadow: var(--shadow-soft);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-bounce);
+    box-shadow: var(--shadow-soft);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--gradient-blue);
+}
+
+.stat-card.gradient-blue::before { background: var(--gradient-blue); }
+.stat-card.gradient-green::before { background: var(--gradient-green); }
+.stat-card.gradient-orange::before { background: var(--gradient-orange); }
+.stat-card.gradient-red::before { background: var(--gradient-red); }
+.stat-card.gradient-purple::before { background: var(--gradient-purple); }
+.stat-card.gradient-teal::before { background: var(--gradient-teal); }
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-strong);
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xl);
+    color: white;
+    background: var(--gradient-blue);
+}
+
+.stat-card.gradient-blue .stat-icon { background: var(--gradient-blue); }
+.stat-card.gradient-green .stat-icon { background: var(--gradient-green); }
+.stat-card.gradient-orange .stat-icon { background: var(--gradient-orange); }
+.stat-card.gradient-red .stat-icon { background: var(--gradient-red); }
+.stat-card.gradient-purple .stat-icon { background: var(--gradient-purple); }
+.stat-card.gradient-teal .stat-icon { background: var(--gradient-teal); }
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.stat-trend.up {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+.stat-trend.down {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+.stat-trend.neutral {
+    background: rgba(107, 114, 128, 0.1);
+    color: #374151;
+}
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stat-value {
+    font-size: var(--font-size-3xl);
+    font-weight: 900;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: var(--font-size-base);
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.stat-progress {
+    height: 6px;
+    background: #f3f4f6;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--gradient-blue);
+    border-radius: 3px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card.gradient-blue .progress-bar { background: var(--gradient-blue); }
+.stat-card.gradient-green .progress-bar { background: var(--gradient-green); }
+.stat-card.gradient-orange .progress-bar { background: var(--gradient-orange); }
+.stat-card.gradient-red .progress-bar { background: var(--gradient-red); }
+.stat-card.gradient-purple .progress-bar { background: var(--gradient-purple); }
+.stat-card.gradient-teal .progress-bar { background: var(--gradient-teal); }
+
+/* Controls Panel */
+.hpi-controls-panel {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.controls-header {
+    background: var(--hpi-primary);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.controls-header h2 {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    margin: 0;
+}
+
+.controls-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-action-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.control-action-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+.controls-content {
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+}
+
+.filter-section h3,
+.view-section h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: #374151;
+    font-size: var(--font-size-sm);
+}
+
+.range-slider {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e5e7eb;
+    outline: none;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--hpi-primary);
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--hpi-primary);
+    cursor: pointer;
+    border: none;
+    box-shadow: var(--shadow-soft);
+}
+
+.range-values {
+    text-align: center;
+    margin-top: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.date-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+}
+
+.date-input,
+.select-input {
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.date-input:focus,
+.select-input:focus {
+    border-color: var(--hpi-primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    outline: none;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: #374151;
+}
+
+.checkbox-item input[type="checkbox"] {
+    display: none;
+}
+
+.checkmark {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    position: relative;
+}
+
+.checkmark.safe { background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; }
+.checkmark.moderate { background: rgba(245, 158, 11, 0.2); border: 2px solid #f59e0b; }
+.checkmark.high { background: rgba(239, 68, 68, 0.2); border: 2px solid #ef4444; }
+.checkmark.critical { background: rgba(220, 38, 38, 0.2); border: 2px solid #dc2626; }
+
+.checkbox-item input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    color: white;
+    font-weight: 900;
+}
+
+.checkbox-item input[type="checkbox"]:checked + .checkmark.safe { background: #22c55e; }
+.checkbox-item input[type="checkbox"]:checked + .checkmark.moderate { background: #f59e0b; }
+.checkbox-item input[type="checkbox"]:checked + .checkmark.high { background: #ef4444; }
+.checkbox-item input[type="checkbox"]:checked + .checkmark.critical { background: #dc2626; }
+
+.view-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.view-btn {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    color: #374151;
+    transition: var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-btn:hover {
+    border-color: var(--hpi-primary);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.view-btn.active {
+    background: var(--hpi-primary);
+    border-color: var(--hpi-primary);
+    color: white;
+    box-shadow: var(--shadow-soft);
+}
+
+.view-btn i {
+    font-size: var(--font-size-xl);
+}
+
+/* Visualization Container */
+.hpi-visualization-container {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.view-container {
+    display: none;
+}
+
+.view-container.active {
+    display: block;
+}
+
+/* Table Styles */
+.table-container {
+    padding: 2rem;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.table-header h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.table-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.table-action-btn {
+    background: var(--hpi-primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.table-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+.enhanced-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.hpi-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.hpi-table thead th {
+    background: var(--hpi-primary);
+    color: white;
+    padding: 1.5rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.th-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.sort-icon {
+    opacity: 0.5;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.hpi-table tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: var(--transition);
+}
+
+.hpi-table tbody tr:hover {
+    background: rgba(102, 126, 234, 0.02);
+}
+
+.hpi-table td {
+    padding: 1.5rem 1rem;
+    vertical-align: middle;
+}
+
+/* Table Column Styles */
+.id-column {
+    width: 100px;
+}
+
+.sample-id {
+    display: flex;
+    align-items: center;
+}
+
+.id-badge {
+    background: var(--hpi-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+}
+
+.location-column {
+    min-width: 200px;
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.location-pin {
+    color: #ef4444;
+    font-size: var(--font-size-lg);
+}
+
+.location-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.location-name {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: var(--font-size-base);
+}
+
+.coordinates {
+    font-size: var(--font-size-xs);
+    color: #6b7280;
+    font-family: monospace;
+}
+
+.date-column {
+    width: 120px;
+}
+
+.date-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.date-main {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.date-time {
+    font-size: var(--font-size-xs);
+    color: #6b7280;
+}
+
+.metals-column {
+    min-width: 300px;
+}
+
+.metals-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
+.metal-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #f9fafb;
+    border-radius: var(--border-radius);
+}
+
+.metal-symbol {
+    font-weight: 800;
+    font-size: var(--font-size-xs);
+    color: #374151;
+    min-width: 20px;
+}
+
+.metal-value {
+    font-weight: 700;
+    font-size: var(--font-size-xs);
+    min-width: 60px;
+}
+
+.metal-value.safe { color: #22c55e; }
+.metal-value.danger { color: #ef4444; }
+
+.metal-bar {
+    flex: 1;
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease-in-out;
+}
+
+.hpi-column {
+    width: 150px;
+}
+
+.hpi-score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.hpi-score {
+    font-size: var(--font-size-xl);
+    font-weight: 900;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    min-width: 80px;
+    text-align: center;
+}
+
+.hpi-score.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border: 2px solid #22c55e;
+}
+
+.hpi-score.moderate {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+    border: 2px solid #f59e0b;
+}
+
+.hpi-score.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 2px solid #ef4444;
+}
+
+.hpi-bar {
+    width: 100px;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.hpi-fill {
+    height: 100%;
+    background: var(--hpi-primary);
+    border-radius: 4px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.risk-column {
+    width: 120px;
+}
+
+.risk-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+    text-align: center;
+}
+
+.risk-badge.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border: 1px solid #22c55e;
+}
+
+.risk-badge.moderate {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+    border: 1px solid #f59e0b;
+}
+
+.risk-badge.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.risk-badge.critical {
+    background: rgba(220, 38, 38, 0.1);
+    color: #991b1b;
+    border: 1px solid #dc2626;
+}
+
+.actions-column {
+    width: 200px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition-bounce);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+}
+
+.action-btn.view-details {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.action-btn.view-details:hover {
+    background: #2563eb;
+    color: white;
+    transform: scale(1.1);
+}
+
+.action-btn.compare-sample {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.action-btn.compare-sample:hover {
+    background: #059669;
+    color: white;
+    transform: scale(1.1);
+}
+
+.action-btn.share-sample {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.action-btn.share-sample:hover {
+    background: #d97706;
+    color: white;
+    transform: scale(1.1);
+}
+
+.action-btn.download-report {
+    background: rgba(139, 69, 19, 0.1);
+    color: #92400e;
+}
+
+.action-btn.download-report:hover {
+    background: #92400e;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Grid View Styles */
+.grid-container {
+    padding: 2rem;
+}
+
+.samples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.sample-card.advanced {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+    transition: var(--transition-bounce);
+    position: relative;
+}
+
+.sample-card.advanced::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: var(--hpi-primary);
+}
+
+.sample-card.advanced:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-strong);
+}
+
+.card-header {
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.card-id-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sample-id-badge {
+    background: var(--hpi-primary);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    font-size: var(--font-size-sm);
+}
+
+.hpi-indicator {
+    font-size: var(--font-size-xl);
+    font-weight: 900;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    text-align: center;
+    min-width: 80px;
+}
+
+.hpi-indicator.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border: 2px solid #22c55e;
+}
+
+.hpi-indicator.moderate {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+    border: 2px solid #f59e0b;
+}
+
+.hpi-indicator.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 2px solid #ef4444;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.card-action-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #6b7280;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-action-btn:hover {
+    background: var(--hpi-primary);
+    color: white;
+    transform: scale(1.1);
+}
+
+.card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.location-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.location-section i {
+    color: #ef4444;
+    font-size: var(--font-size-lg);
+}
+
+.location-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.location-name {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: var(--font-size-base);
+}
+
+.sample-date {
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+}
+
+.metals-section h4 {
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.metals-chart {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.metal-bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.metal-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.metal-label {
+    font-weight: 800;
+    color: #374151;
+    min-width: 25px;
+    font-size: var(--font-size-sm);
+}
+
+.metal-progress {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease-in-out;
+}
+
+.metal-val {
+    font-weight: 700;
+    color: #1f2937;
+    min-width: 60px;
+    text-align: right;
+    font-size: var(--font-size-xs);
+}
+
+.risk-assessment-section {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+}
+
+.risk-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.risk-header span {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: var(--font-size-sm);
+}
+
+.risk-status {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 700;
+    font-size: var(--font-size-xs);
+}
+
+.risk-status.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+.risk-status.moderate {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+}
+
+.risk-status.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+.risk-gauge-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.gauge-track {
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.gauge-progress {
+    height: 100%;
+    background: var(--hpi-primary);
+    border-radius: 6px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gauge-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.card-footer {
+    padding: 1.5rem;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    gap: 1rem;
+}
+
+.card-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: var(--font-size-sm);
+}
+
+.card-btn.primary {
+    background: var(--hpi-primary);
+    color: white;
+}
+
+.card-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft);
+}
+
+.card-btn.secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.card-btn.secondary:hover {
+    background: #e5e7eb;
+    transform: translateY(-2px);
+}
+
+/* Chart View Styles */
+.charts-container {
+    padding: 2rem;
+}
+
+.chart-section {
+    background: white;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.chart-header {
+    background: var(--hpi-primary);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    aligneveItems: center;
+}
+
+.chart-header h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.chart-selector {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+}
+
+.chart-content {
+    padding: 2rem;
+    min-height: 400px;
+}
+
+.chart-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: #6b7280;
+    text-align: center;
+}
+
+.chart-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+
+.loading-animation {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.loading-bar {
+    width: 4px;
+    height: 40px;
+    background: var(--hpi-primary);
+    border-radius: 2px;
+    animation: loading-pulse 1.5s ease-in-out infinite;
+}
+
+.loading-bar:nth-child(2) { animation-delay: 0.2s; }
+.loading-bar:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loading-pulse {
+    0%, 100% { transform: scaleY(0.3); opacity: 0.3; }
+    50% { transform: scaleY(1); opacity: 1; }
+}
+
+/* Map View Styles */
+.map-container.enhanced {
+    padding: 2rem;
+}
+
+.map-header {
+    background: var(--hpi-dark);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.map-header h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.map-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.map-style-selector {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+}
+
+.map-control-btn {
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.map-control-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.map-content {
+    min-height: 500px;
+    background: #f9fafb;
+    border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.map-placeholder {
+    text-align: center;
+    color: #6b7280;
+}
+
+.map-placeholder i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+
+/* Methodology Panel */
+.methodology-panel {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    margin-bottom: 3rem;
+    overflow: hidden;
+}
+
+.methodology-header {
+    background: var(--hpi-info);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.methodology-header h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.methodology-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+}
+
+.methodology-toggle:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.methodology-content {
+    padding: 2rem;
+    transition: var(--transition);
+}
+
+.methodology-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.methodology-card {
+    background: #f9fafb;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    border: 2px solid transparent;
+    transition: var(--transition);
+}
+
+.methodology-card:hover {
+    border-color: var(--hpi-primary);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-soft);
+}
+
+.methodology-card h3 {
+    font-size: var(--font-size-lg);
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.formula-container {
+    text-align: center;
+}
+
+.formula {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--hpi-primary);
+    background: white;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1.5rem;
+    font-family: 'Courier New', monospace;
+    box-shadow: var(--shadow-soft);
+}
+
+.formula-explanation {
+    text-align: left;
+}
+
+.formula-explanation p {
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.formula-explanation ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.formula-explanation li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #374151;
+}
+
+.weights-table {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.weight-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.metal-name {
+    flex: 0 0 120px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.weight-value {
+    flex: 0 0 40px;
+    font-weight: 800;
+    color: var(--hpi-primary);
+    text-align: center;
+}
+
+.weight-bar {
+    flex: 1;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.weight-fill {
+    height: 100%;
+    background: var(--hpi-primary);
+    border-radius: 4px;
+    transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.risk-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: white;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.category-item.safe { border-left: 4px solid #22c55e; }
+.category-item.moderate { border-left: 4px solid #f59e0b; }
+.category-item.high { border-left: 4px solid #ef4444; }
+.category-item.critical { border-left: 4px solid #dc2626; }
+
+.category-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+}
+
+.category-item.safe .category-indicator { background: #22c55e; }
+.category-item.moderate .category-indicator { background: #f59e0b; }
+.category-item.high .category-indicator { background: #ef4444; }
+.category-item.critical .category-indicator { background: #dc2626; }
+
+.category-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.category-name {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.category-range {
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Comparison Panel */
+.comparison-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+}
+
+.comparison-content {
+    background: white;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-strong);
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.comparison-header {
+    background: var(--hpi-primary);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.comparison-header h2 {
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.close-comparison {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-lg);
+}
+
+.close-comparison:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.comparison-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.comparison-samples {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.comparison-chart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    border-radius: var(--border-radius);
+    min-height: 400px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .controls-content {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .hpi-hero-section {
+        padding: 3rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: var(--font-size-3xl);
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .hero-btn {
+        justify-content: center;
+    }
+    
+    .main-hpi-gauge .gauge-outer {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .controls-content {
+        padding: 1rem;
+    }
+    
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .view-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-container {
+        padding: 1rem;
+    }
+    
+    .enhanced-table-wrapper {
+        font-size: var(--font-size-sm);
+    }
+    
+    .samples-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .methodology-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .comparison-content {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-badge {
+        padding: 0.5rem 1rem;
+        font-size: var(--font-size-xs);
+    }
+    
+    .hero-title {
+        font-size: var(--font-size-2xl);
+    }
+    
+    .hero-description {
+        font-size: var(--font-size-base);
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+    }
+    
+    .main-hpi-gauge .gauge-outer {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .hpi-value {
+        font-size: var(--font-size-xl);
+    }
+}
+</style>
+
+<script>
+// Enhanced HPI Dashboard JavaScript
+let currentView = 'table';
+let selectedSamples = [];
+let filters = {
+    hpiMin: 0,
+    hpiMax: 200,
+    startDate: null,
+    endDate: null,
+    location: '',
+    riskLevels: ['safe', 'moderate', 'high', 'critical']
+};
+
+// Initialize Dashboard
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+    initializeViewToggle();
+    initializeSorting();
+    initializeRangeSliders();
+    updateProgressBars();
+    animateCounters();
+});
+
+// Hero Actions
+function scrollToAnalysis() {
+    document.getElementById('analysisSection').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+function downloadReport() {
+    // Simulate report generation
+    showNotification('Generating comprehensive HPI report...', 'info');
+    setTimeout(() => {
+        showNotification('Report generated successfully!', 'success');
+        // Simulate download
+        const link = document.createElement('a');
+        link.download = `HPI-Report-${new Date().toISOString().split('T')[0]}.pdf`;
+        link.href = '#'; // Would be actual report URL
+        // link.click();
+    }, 2000);
+}
+
+// Filter System
+function initializeFilters() {
+    // Range sliders
+    const hpiMinSlider = document.getElementById('hpiMin');
+    const hpiMaxSlider = document.getElementById('hpiMax');
+    const hpiMinValue = document.getElementById('hpiMinValue');
+    const hpiMaxValue = document.getElementById('hpiMaxValue');
+    
+    if (hpiMinSlider && hpiMaxSlider) {
+        hpiMinSlider.addEventListener('input', function() {
+            filters.hpiMin = parseInt(this.value);
+            hpiMinValue.textContent = this.value;
+            if (filters.hpiMin >= filters.hpiMax) {
+                filters.hpiMax = filters.hpiMin + 1;
+                hpiMaxSlider.value = filters.hpiMax;
+                hpiMaxValue.textContent = filters.hpiMax;
+            }
+            applyFilters();
+        });
+        
+        hpiMaxSlider.addEventListener('input', function() {
+            filters.hpiMax = parseInt(this.value);
+            hpiMaxValue.textContent = this.value;
+            if (filters.hpiMax <= filters.hpiMin) {
+                filters.hpiMin = filters.hpiMax - 1;
+                hpiMinSlider.value = filters.hpiMin;
+                hpiMinValue.textContent = filters.hpiMin;
+            }
+            applyFilters();
+        });
+    }
+    
+    // Date filters
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    
+    if (startDate) {
+        startDate.addEventListener('change', function() {
+            filters.startDate = this.value;
+            applyFilters();
+        });
+    }
+    
+    if (endDate) {
+        endDate.addEventListener('change', function() {
+            filters.endDate = this.value;
+            applyFilters();
+        });
+    }
+    
+    // Location filter
+    const locationFilter = document.getElementById('locationFilter');
+    if (locationFilter) {
+        locationFilter.addEventListener('change', function() {
+            filters.location = this.value;
+            applyFilters();
+        });
+    }
+    
+    // Risk level checkboxes
+    document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const riskLevel = this.parentElement.querySelector('.checkmark').classList[1];
+            if (this.checked) {
+                if (!filters.riskLevels.includes(riskLevel)) {
+                    filters.riskLevels.push(riskLevel);
+                }
+            } else {
+                filters.riskLevels = filters.riskLevels.filter(level => level !== riskLevel);
+            }
+            applyFilters();
+        });
+    });
+}
+
+function applyFilters() {
+    const rows = document.querySelectorAll('.sample-row');
+    const cards = document.querySelectorAll('.sample-card.advanced');
+    
+    // Filter table rows
+    rows.forEach(row => {
+        const hpi = parseFloat(row.dataset.hpi);
+        const location = row.dataset.location;
+        const dateCell = row.querySelector('.date-main');
+        const sampleDate = dateCell ? new Date(dateCell.textContent) : new Date();
+        
+        let show = true;
+        
+        // HPI range filter
+        if (hpi < filters.hpiMin || hpi > filters.hpiMax) {
+            show = false;
+        }
+        
+        // Location filter
+        if (filters.location && location !== filters.location) {
+            show = false;
+        }
+        
+        // Date range filter
+        if (filters.startDate && sampleDate < new Date(filters.startDate)) {
+            show = false;
+        }
+        if (filters.endDate && sampleDate > new Date(filters.endDate)) {
+            show = false;
+        }
+        
+        // Risk level filter
+        const riskBadge = row.querySelector('.risk-badge');
+        if (riskBadge) {
+            const riskLevel = riskBadge.classList[1];
+            if (!filters.riskLevels.includes(riskLevel)) {
+                show = false;
+            }
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+    
+    // Filter grid cards
+    cards.forEach(card => {
+        const hpi = parseFloat(card.dataset.hpi);
+        // Apply same filtering logic for cards
+        // ... (similar logic as above)
+    });
+    
+    updateFilteredCount();
+}
+
+function resetFilters() {
+    // Reset all filter values
+    document.getElementById('hpiMin').value = 0;
+    document.getElementById('hpiMax').value = 200;
+    document.getElementById('hpiMinValue').textContent = '0';
+    document.getElementById('hpiMaxValue').textContent = '200';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    document.getElementById('locationFilter').value = '';
+    
+    // Reset checkboxes
+    document.querySelectorAll('.checkbox-item input[type="checkbox"]').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+    
+    // Reset filters object
+    filters = {
+        hpiMin: 0,
+        hpiMax: 200,
+        startDate: null,
+        endDate: null,
+        location: '',
+        riskLevels: ['safe', 'moderate', 'high', 'critical']
+    };
+    
+    applyFilters();
+    showNotification('Filters reset successfully', 'success');
+}
+
+function updateFilteredCount() {
+    const visibleRows = document.querySelectorAll('.sample-row:not([style*="display: none"])').length;
+    // Update any count display elements
+}
+
+// View Toggle System
+function initializeViewToggle() {
+    document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const view = this.dataset.view;
+            switchView(view);
+            
+            // Update active button
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+}
+
+function switchView(view) {
+    currentView = view;
+    
+    // Hide all view containers
+    document.querySelectorAll('.view-container').forEach(container => {
+        container.classList.remove('active');
+    });
+    
+    // Show selected view
+    const targetView = document.getElementById(view + 'View');
+    if (targetView) {
+        targetView.classList.add('active');
+    }
+    
+    // Load data for specific views
+    if (view === 'chart' && !document.querySelector('#chartView .chart-content canvas')) {
+        loadChartData();
+    } else if (view === 'map' && !document.querySelector('#mapView .leaflet-container')) {
+        loadMapData();
+    }
+}
+
+// Sorting System
+function initializeSorting() {
+    document.querySelectorAll('.sortable').forEach(header => {
+        header.addEventListener('click', function() {
+            const sortBy = this.dataset.sort;
+            const sortIcon = this.querySelector('.sort-icon');
+            
+            // Determine sort direction
+            let direction = 'asc';
+            if (sortIcon.classList.contains('fa-sort-up')) {
+                direction = 'desc';
+            }
+            
+            // Update sort icon
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.className = 'fas fa-sort sort-icon';
+            });
+            
+            sortIcon.className = direction === 'asc' ? 'fas fa-sort-up sort-icon' : 'fas fa-sort-down sort-icon';
+            
+            // Sort table
+            sortTable(sortBy, direction);
+        });
+    });
+}
+
+function sortTable(column, direction) {
+    const tbody = document.getElementById('hpiTableBody');
+    const rows = Array.from(tbody.querySelectorAll('.sample-row'));
+    
+    rows.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch(column) {
+            case 'id':
+                aVal = parseInt(a.querySelector('.id-badge').textContent.replace('#', ''));
+                bVal = parseInt(b.querySelector('.id-badge').textContent.replace('#', ''));
+                break;
+            case 'location':
+                aVal = a.querySelector('.location-name').textContent.toLowerCase();
+                bVal = b.querySelector('.location-name').textContent.toLowerCase();
+                break;
+            case 'date':
+                aVal = new Date(a.querySelector('.date-main').textContent);
+                bVal = new Date(b.querySelector('.date-main').textContent);
+                break;
+            case 'hpi':
+                aVal = parseFloat(a.querySelector('.hpi-score').textContent);
+                bVal = parseFloat(b.querySelector('.hpi-score').textContent);
+                break;
+            default:
+                return 0;
+        }
+        
+        if (direction === 'asc') {
+            return aVal > bVal ? 1 : -1;
+        } else {
+            return aVal < bVal ? 1 : -1;
+        }
+    });
+    
+    // Reorder rows
+    rows.forEach(row => tbody.appendChild(row));
+    
+    showNotification(`Table sorted by ${column} (${direction})`, 'info');
+}
+
+// Sample Interaction Functions
+function viewSampleDetails(sampleId) {
+    // Open detailed view modal or navigate to detail page
+    showNotification(`Loading details for sample #${sampleId}...`, 'info');
+    // Implement navigation or modal opening
+    setTimeout(() => {
+        window.location.href = `/sample/${sampleId}/`;
+    }, 500);
+}
+
+function addToCompare(sampleId) {
+    if (selectedSamples.includes(sampleId)) {
+        selectedSamples = selectedSamples.filter(id => id !== sampleId);
+        showNotification(`Sample #${sampleId} removed from comparison`, 'info');
+    } else if (selectedSamples.length < 5) {
+        selectedSamples.push(sampleId);
+        showNotification(`Sample #${sampleId} added to comparison`, 'success');
+    } else {
+        showNotification('Maximum 5 samples can be compared at once', 'warning');
+        return;
+    }
+    
+    updateCompareButtons();
+    
+    if (selectedSamples.length >= 2) {
+        document.getElementById('comparisonPanel').style.display = 'flex';
+        loadComparisonData();
+    }
+}
+
+function updateCompareButtons() {
+    document.querySelectorAll('.compare-sample').forEach(btn => {
+        const sampleId = parseInt(btn.getAttribute('onclick').match(/\d+/)[0]);
+        if (selectedSamples.includes(sampleId)) {
+            btn.style.background = '#059669';
+            btn.style.color = 'white';
+        } else {
+            btn.style.background = 'rgba(16, 185, 129, 0.1)';
+            btn.style.color = '#059669';
+        }
+    });
+}
+
+function shareSample(sampleId) {
+    const url = `${window.location.origin}/sample/${sampleId}/`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: `HPI Analysis - Sample #${sampleId}`,
+            text: `Check out this heavy metal pollution analysis for sample #${sampleId}`,
+            url: url
+        }).then(() => {
+            showNotification('Sample shared successfully!', 'success');
+        }).catch(err => {
+            console.error('Error sharing:', err);
+            fallbackShare(url);
+        });
+    } else {
+        fallbackShare(url);
+    }
+}
+
+function fallbackShare(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        showNotification('Sample URL copied to clipboard!', 'success');
+    }).catch(err => {
+        console.error('Error copying to clipboard:', err);
+        showNotification('Unable to share sample', 'error');
+    });
+}
+
+function downloadSampleReport(sampleId) {
+    showNotification(`Generating PDF report for sample #${sampleId}...`, 'info');
+    
+    // Simulate report generation
+    setTimeout(() => {
+        showNotification('PDF report generated successfully!', 'success');
+        
+        // Simulate download
+        const link = document.createElement('a');
+        link.download = `HPI-Sample-${sampleId}-Report.pdf`;
+        link.href = `/api/sample-report/${sampleId}/pdf/`;
+        // link.click();
+    }, 2000);
+}
+
+// Comparison System
+function loadComparisonData() {
+    const comparisonSamples = document.getElementById('comparisonSamples');
+    const comparisonChart = document.getElementById('comparisonChart');
+    
+    // Clear existing content
+    comparisonSamples.innerHTML = '';
+    
+    // Add selected samples to comparison view
+    selectedSamples.forEach(sampleId => {
+        const sampleElement = createComparisonSampleElement(sampleId);
+        comparisonSamples.appendChild(sampleElement);
+    });
+    
+    // Generate comparison chart
+    generateComparisonChart();
+}
+
+function createComparisonSampleElement(sampleId) {
+    const element = document.createElement('div');
+    element.className = 'comparison-sample-item';
+    element.innerHTML = `
+        <div class="comparison-sample-header">
+            <span class="sample-id">#${sampleId}</span>
+            <button onclick="removeFromComparison(${sampleId})" class="remove-sample-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="comparison-sample-data">
+            <!-- Sample data would be populated here -->
+        </div>
+    `;
+    return element;
+}
+
+function removeFromComparison(sampleId) {
+    selectedSamples = selectedSamples.filter(id => id !== sampleId);
+    updateCompareButtons();
+    
+    if (selectedSamples.length < 2) {
+        closeComparison();
+    } else {
+        loadComparisonData();
+    }
+    
+    showNotification(`Sample #${sampleId} removed from comparison`, 'info');
+}
+
+function closeComparison() {
+    document.getElementById('comparisonPanel').style.display = 'none';
+    selectedSamples = [];
+    updateCompareButtons();
+}
+
+function generateComparisonChart() {
+    const chartContainer = document.getElementById('comparisonChart');
+    
+    // This would integrate with Chart.js or similar library
+    chartContainer.innerHTML = `
+        <div class="comparison-chart-placeholder">
+            <i class="fas fa-chart-radar"></i>
+            <h4>Comparison Chart</h4>
+            <p>Comparing ${selectedSamples.length} samples</p>
+            <div class="chart-loading">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    `;
+    
+    // Simulate chart loading
+    setTimeout(() => {
+        // chartContainer.innerHTML = '<canvas id="comparisonChartCanvas"></canvas>';
+        // Initialize actual chart here
+    }, 1000);
+}
+
+// Chart and Map Loading
+function loadChartData() {
+    const chartContent = document.querySelector('#chartView .chart-content');
+    
+    chartContent.innerHTML = `
+        <div class="chart-placeholder">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h4>Loading HPI Analysis Chart...</h4>
+            <div class="loading-animation">
+                <div class="loading-bar"></div>
+                <div class="loading-bar"></div>
+                <div class="loading-bar"></div>
+            </div>
+        </div>
+    `;
+    
+    // Simulate chart loading
+    setTimeout(() => {
+        // Load actual chart data and render
+        fetch('/api/hpi-chart-data/')
+            .then(response => response.json())
+            .then(data => {
+                // Render chart with data
+                renderHPIChart(data);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                chartContent.innerHTML = `
+                    <div class="chart-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>Error Loading Chart</h4>
+                        <p>Unable to load chart data. Please try again.</p>
+                        <button onclick="loadChartData()">Retry</button>
+                    </div>
+                `;
+            });
+    }, 1500);
+}
+
+function loadMapData() {
+    const mapContent = document.querySelector('#mapView .map-content');
+    
+    mapContent.innerHTML = `
+        <div class="map-placeholder">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h4>Loading Interactive HPI Map...</h4>
+            <p>Preparing geographic visualization...</p>
+        </div>
+    `;
+    
+    // Simulate map loading
+    setTimeout(() => {
+        fetch('/api/hpi-map-data/')
+            .then(response => response.json())
+            .then(data => {
+                // Initialize interactive map
+                initializeHPIMap(data);
+            })
+            .catch(error => {
+                console.error('Error loading map data:', error);
+                mapContent.innerHTML = `
+                    <div class="map-error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h4>Error Loading Map</h4>
+                        <p>Unable to load map data. Please try again.</p>
+                        <button onclick="loadMapData()">Retry</button>
+                    </div>
+                `;
+            });
+    }, 2000);
+}
+
+// Utility Functions
+function initializeRangeSliders() {
+    const sliders = document.querySelectorAll('.slider');
+    sliders.forEach(slider => {
+        slider.addEventListener('input', function() {
+            const progress = (this.value - this.min) / (this.max - this.min) * 100;
+            this.style.background = `linear-gradient(to right, var(--hpi-primary) 0%, var(--hpi-primary) ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`;
+        });
+        
+        // Initial styling
+        const progress = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+        slider.style.background = `linear-gradient(to right, var(--hpi-primary) 0%, var(--hpi-primary) ${progress}%, #e5e7eb ${progress}%, #e5e7eb 100%)`;
+    });
+}
+
+function updateProgressBars() {
+    // Animate progress bars on page load
+    setTimeout(() => {
+        document.querySelectorAll('.progress-bar, .progress-fill, .hpi-fill, .gauge-progress').forEach(bar => {
+            const width = bar.style.width;
+            bar.style.width = '0%';
+            setTimeout(() => {
+                bar.style.width = width;
+            }, 100);
+        });
+    }, 500);
+}
+
+function animateCounters() {
+    document.querySelectorAll('.stat-value, .hpi-value').forEach(counter => {
+        const target = parseFloat(counter.textContent);
+        if (isNaN(target)) return;
+        
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            
+            if (counter.classList.contains('hpi-value')) {
+                counter.textContent = current.toFixed(1);
+            } else {
+                counter.textContent = Math.round(current);
+            }
+        }, 30);
+    });
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas fa-${getNotificationIcon(type)}"></i>
+            <span>${message}</span>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+    
+    // Style the notification
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        max-width: 400px;
+        border-left: 4px solid ${getNotificationColor(type)};
+        animation: slideIn 0.3s ease-out;
+    `;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        success: 'check-circle',
+        error: 'exclamation-circle',
+        warning: 'exclamation-triangle',
+        info: 'info-circle'
+    };
+    return icons[type] || icons.info;
+}
+
+function getNotificationColor(type) {
+    const colors = {
+        success: '#22c55e',
+        error: '#ef4444',
+        warning: '#f59e0b',
+        info: '#3b82f6'
+    };
+    return colors[type] || colors.info;
+}
+
+// Methodology Panel Toggle
+function toggleMethodology() {
+    const content = document.querySelector('.methodology-content');
+    const toggle = document.querySelector('.methodology-toggle');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        toggle.innerHTML = '<i class="fas fa-chevron-up"></i>';
+    } else {
+        content.style.display = 'none';
+        toggle.innerHTML = '<i class="fas fa-chevron-down"></i>';
+    }
+}
+
+// Export Functions
+function exportData() {
+    showNotification('Preparing data export...', 'info');
+    
+    setTimeout(() => {
+        const exportData = {
+            samples: selectedSamples.length > 0 ? selectedSamples : 'all',
+            filters: filters,
+            timestamp: new Date().toISOString()
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `HPI-Data-Export-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        showNotification('Data exported successfully!', 'success');
+    }, 1000);
+}
+
+// Map Controls
+function toggleHeatmap() {
+    showNotification('Toggling heatmap overlay...', 'info');
+    // Implement heatmap toggle logic
+}
+
+function toggleClusters() {
+    showNotification('Toggling cluster view...', 'info');
+    // Implement cluster toggle logic
+}
+
+// Period Filter
+document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const period = this.textContent.toLowerCase();
+        loadPeriodData(period);
+    });
+});
+
+function loadPeriodData(period) {
+    showNotification(`Loading data for ${period}...`, 'info');
+    
+    // Simulate loading period-specific data
+    setTimeout(() => {
+        // Update statistics based on period
+        updateStatistics(period);
+        showNotification(`Data updated for ${period}`, 'success');
+    }, 1000);
+}
+
+function updateStatistics(period) {
+    // This would update the statistics based on the selected period
+    // For now, just animate the progress bars again
+    updateProgressBars();
+    animateCounters();
+}
+
+// Add CSS for notifications
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .notification-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+    
+    .notification-close {
+        background: none;
+        border: none;
+        color: #6b7280;
+        cursor: pointer;
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    
+    .notification-close:hover {
+        background: #f3f4f6;
+        color: #1f2937;
+    }
+`;
+document.head.appendChild(notificationStyles);
+</script>
+{% endblock %}

@@ -1,0 +1,985 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}Sample Database - HMPI System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <div class="header-text">
+            <h1 class="page-title">Water Quality Sample Database</h1>
+            <p class="page-subtitle">Comprehensive collection of water samples with heavy metal analysis results</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'add_sample' %}" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> Add New Sample
+            </a>
+            <a href="{% url 'upload_csv' %}" class="btn btn-secondary">
+                <i class="fas fa-cloud-upload-alt"></i> Upload CSV
+            </a>
+            <a href="{% url 'filtered_sample_list' %}" class="btn btn-success">
+                <i class="fas fa-filter"></i> Filter Samples
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="database-stats">
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ samples.count }}</div>
+                <div class="stat-label">Total Samples</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value">{{ samples.first.date|date:"M Y"|default:"N/A" }}</div>
+                <div class="stat-label">Latest Sample</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-map-marked-alt"></i>
+            </div>
+            <div class="stat-content">
+                {% regroup samples by location as location_groups %}
+                <div class="stat-value">{{ location_groups|length }}</div>
+                <div class="stat-label">Unique Locations</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-value unsafe">{{ high_contamination_count|default:0 }}</div>
+                <div class="stat-label">High Risk Samples</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if samples %}
+<div class="samples-container">
+    <div class="table-header">
+        <h3><i class="fas fa-table"></i> Sample Analysis Results</h3>
+        <div class="table-controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search samples..." class="search-input">
+                <i class="fas fa-search search-icon"></i>
+            </div>
+            <div class="view-toggle">
+                <button class="toggle-btn active" data-view="table">
+                    <i class="fas fa-table"></i>
+                </button>
+                <button class="toggle-btn" data-view="grid">
+                    <i class="fas fa-th-large"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table View -->
+    <div class="table-view active" id="tableView">
+        <div class="table-wrapper">
+            <table class="enhanced-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="id">
+                            <i class="fas fa-hashtag"></i> ID
+                            <span class="sort-arrow"></span>
+                        </th>
+                        <th class="sortable" data-sort="location">
+                            <i class="fas fa-map-marker-alt"></i> Location
+                            <span class="sort-arrow"></span>
+                        </th>
+                        <th class="sortable" data-sort="date">
+                            <i class="fas fa-calendar"></i> Date
+                            <span class="sort-arrow"></span>
+                        </th>
+                        <th class="metal-header lead">
+                            <i class="fas fa-atom"></i> Lead
+                            <small>mg/L</small>
+                        </th>
+                        <th class="metal-header mercury">
+                            <i class="fas fa-atom"></i> Mercury
+                            <small>mg/L</small>
+                        </th>
+                        <th class="metal-header cadmium">
+                            <i class="fas fa-atom"></i> Cadmium
+                            <small>mg/L</small>
+                        </th>
+                        <th class="metal-header arsenic">
+                            <i class="fas fa-atom"></i> Arsenic
+                            <small>mg/L</small>
+                        </th>
+                        <th><i class="fas fa-globe"></i> Coordinates</th>
+                        <th><i class="fas fa-tools"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="samplesTableBody">
+                    {% for sample in samples %}
+                    <tr class="sample-row" data-location="{{ sample.location }}" data-date="{{ sample.date|date:'Y-m-d' }}">
+                        <td class="id-cell">
+                            <span class="sample-id">#{{ sample.id }}</span>
+                        </td>
+                        <td class="location-cell">
+                            <div class="location-info">
+                                <strong class="location-name">{{ sample.location }}</strong>
+                            </div>
+                        </td>
+                        <td class="date-cell">
+                            <div class="date-badge">
+                                <i class="fas fa-calendar-day"></i>
+                                {{ sample.date|date:"M d, Y" }}
+                            </div>
+                        </td>
+                        <td class="metal-cell">
+                            <span class="metal-value {% if sample.lead > 0.01 %}danger{% else %}safe{% endif %}">
+                                {{ sample.lead|floatformat:3 }}
+                            </span>
+                            <div class="metal-bar">
+                                <div class="bar-fill" style="width: {% widthratio sample.lead 0.02 100 %}%; background: {% if sample.lead > 0.01 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                            </div>
+                        </td>
+                        <td class="metal-cell">
+                            <span class="metal-value {% if sample.mercury > 0.006 %}danger{% else %}safe{% endif %}">
+                                {{ sample.mercury|floatformat:3 }}
+                            </span>
+                            <div class="metal-bar">
+                                <div class="bar-fill" style="width: {% widthratio sample.mercury 0.012 100 %}%; background: {% if sample.mercury > 0.006 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                            </div>
+                        </td>
+                        <td class="metal-cell">
+                            <span class="metal-value {% if sample.cadmium > 0.003 %}danger{% else %}safe{% endif %}">
+                                {{ sample.cadmium|floatformat:3 }}
+                            </span>
+                            <div class="metal-bar">
+                                <div class="bar-fill" style="width: {% widthratio sample.cadmium 0.006 100 %}%; background: {% if sample.cadmium > 0.003 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                            </div>
+                        </td>
+                        <td class="metal-cell">
+                            <span class="metal-value {% if sample.arsenic > 0.01 %}danger{% else %}safe{% endif %}">
+                                {{ sample.arsenic|floatformat:3 }}
+                            </span>
+                            <div class="metal-bar">
+                                <div class="bar-fill" style="width: {% widthratio sample.arsenic 0.02 100 %}%; background: {% if sample.arsenic > 0.01 %}#ef4444{% else %}#22c55e{% endif %};"></div>
+                            </div>
+                        </td>
+                        <td class="coordinates-cell">
+                            {% if sample.latitude and sample.longitude %}
+                                <div class="coordinates">
+                                    <i class="fas fa-map-pin"></i>
+                                    <span>{{ sample.latitude|floatformat:3 }}, {{ sample.longitude|floatformat:3 }}</span>
+                                </div>
+                            {% else %}
+                                <span class="no-data">No GPS data</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons">
+                                <a href="{% url 'sample_detail' sample.id %}" class="action-btn view-btn" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="action-btn share-btn" title="Share Sample" onclick="shareSample({{ sample.id }})">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Grid View -->
+    <div class="grid-view" id="gridView">
+        <div class="samples-grid">
+            {% for sample in samples %}
+            <div class="sample-card" data-location="{{ sample.location }}" data-date="{{ sample.date|date:'Y-m-d' }}">
+                <div class="card-header">
+                    <div class="card-id">#{{ sample.id }}</div>
+                    <div class="card-date">{{ sample.date|date:"M d, Y" }}</div>
+                </div>
+                <div class="card-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <strong>{{ sample.location }}</strong>
+                </div>
+                <div class="metals-overview">
+                    <div class="metal-item">
+                        <span class="metal-name">Lead</span>
+                        <span class="metal-value-card {% if sample.lead > 0.01 %}danger{% else %}safe{% endif %}">
+                            {{ sample.lead|floatformat:3 }}
+                        </span>
+                    </div>
+                    <div class="metal-item">
+                        <span class="metal-name">Mercury</span>
+                        <span class="metal-value-card {% if sample.mercury > 0.006 %}danger{% else %}safe{% endif %}">
+                            {{ sample.mercury|floatformat:3 }}
+                        </span>
+                    </div>
+                    <div class="metal-item">
+                        <span class="metal-name">Cadmium</span>
+                        <span class="metal-value-card {% if sample.cadmium > 0.003 %}danger{% else %}safe{% endif %}">
+                            {{ sample.cadmium|floatformat:3 }}
+                        </span>
+                    </div>
+                    <div class="metal-item">
+                        <span class="metal-name">Arsenic</span>
+                        <span class="metal-value-card {% if sample.arsenic > 0.01 %}danger{% else %}safe{% endif %}">
+                            {{ sample.arsenic|floatformat:3 }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <a href="{% url 'sample_detail' sample.id %}" class="card-btn">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="safety-reference">
+    <h4><i class="fas fa-info-circle"></i> Heavy Metal Safety Limits (WHO/EPA Standards)</h4>
+    <div class="limits-grid">
+        <div class="limit-item">
+            <div class="limit-icon lead"></div>
+            <span class="limit-metal">Lead (Pb)</span>
+            <span class="limit-value">0.01 mg/L</span>
+        </div>
+        <div class="limit-item">
+            <div class="limit-icon mercury"></div>
+            <span class="limit-metal">Mercury (Hg)</span>
+            <span class="limit-value">0.006 mg/L</span>
+        </div>
+        <div class="limit-item">
+            <div class="limit-icon cadmium"></div>
+            <span class="limit-metal">Cadmium (Cd)</span>
+            <span class="limit-value">0.003 mg/L</span>
+        </div>
+        <div class="limit-item">
+            <div class="limit-icon arsenic"></div>
+            <span class="limit-metal">Arsenic (As)</span>
+            <span class="limit-value">0.01 mg/L</span>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">
+        <i class="fas fa-flask"></i>
+    </div>
+    <h3>No Samples Found</h3>
+    <p>Start building your water quality database by adding your first sample or importing data from a CSV file.</p>
+    <div class="empty-actions">
+        <a href="{% url 'add_sample' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add First Sample
+        </a>
+        <a href="{% url 'upload_csv' %}" class="btn btn-secondary">
+            <i class="fas fa-upload"></i> Upload CSV Data
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<style>
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --success-color: #22c55e;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --gray-color: #6b7280;
+    --white: #ffffff;
+    --light-gray: #f8fafc;
+    --border-radius: 8px;
+    --border-radius-lg: 12px;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+.page-header {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-radius: var(--border-radius-lg);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--gray-color);
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.btn-primary:hover {
+    background-color: #5563c1;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: var(--white);
+}
+
+.btn-secondary:hover {
+    background-color: #5e3d8b;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    color: var(--white);
+}
+
+.btn-success:hover {
+    background-color: #16a34a;
+    transform: translateY(-2px);
+}
+
+.database-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.stat-item:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.2rem;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.stat-value.unsafe {
+    color: var(--danger-color);
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--gray-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.samples-container {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 2rem;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-header h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+.table-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-input {
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: var(--border-radius-lg);
+    font-size: 0.9rem;
+    width: 250px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    border-color: rgba(102, 126, 234, 0.5);
+    outline: none;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-color);
+}
+
+.view-toggle {
+    display: flex;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: var(--border-radius);
+    padding: 0.3rem;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    color: var(--gray-color);
+}
+
+.toggle-btn.active {
+    background: var(--white);
+    color: var(--primary-color);
+    box-shadow: var(--shadow);
+}
+
+.table-view,
+.grid-view {
+    display: none;
+}
+
+.table-view.active,
+.grid-view.active {
+    display: block;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+.enhanced-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.enhanced-table th {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+    color: var(--white);
+    padding: 1.2rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.enhanced-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.sample-row:hover {
+    background: rgba(102, 126, 234, 0.03);
+}
+
+.sample-id {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.location-name {
+    color: #1f2937;
+    font-size: 0.95rem;
+}
+
+.date-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--primary-color);
+    border-radius: var(--border-radius-lg);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.metal-cell {
+    text-align: center;
+    padding: 0.8rem 0.5rem;
+}
+
+.metal-value {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.metal-value.safe {
+    color: var(--success-color);
+}
+
+.metal-value.danger {
+    color: var(--danger-color);
+}
+
+.metal-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+.coordinates {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--gray-color);
+}
+
+.no-data {
+    color: var(--gray-color);
+    font-style: italic;
+    font-size: 0.85rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.action-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+}
+
+.view-btn {
+    background: rgba(102, 126, 234, 0.1);
+    color: var(--primary-color);
+}
+
+.view-btn:hover {
+    background: var(--primary-color);
+    color: var(--white);
+    transform: scale(1.1);
+}
+
+.share-btn {
+    background: rgba(79, 172, 254, 0.1);
+    color: #0ea5e9;
+}
+
+.share-btn:hover {
+    background: #0ea5e9;
+    color: var(--white);
+    transform: scale(1.1);
+}
+
+.samples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.sample-card {
+    background: var(--white);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.sample-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card-id {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.card-date {
+    font-size: 0.85rem;
+    color: var(--gray-color);
+}
+
+.card-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+    color: #1f2937;
+}
+
+.metals-overview {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.metal-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: var(--border-radius);
+}
+
+.metal-name {
+    font-size: 0.85rem;
+    color: var(--gray-color);
+    font-weight: 600;
+}
+
+.metal-value-card {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.metal-value-card.safe {
+    color: var(--success-color);
+}
+
+.metal-value-card.danger {
+    color: var(--danger-color);
+}
+
+.card-actions {
+    text-align: center;
+}
+
+.card-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: var(--white);
+    padding: 0.8rem 1.5rem;
+    border-radius: var(--border-radius-lg);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    color: var(--white);
+    text-decoration: none;
+}
+
+.safety-reference {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    margin-top: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.safety-reference h4 {
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.limits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.limit-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: var(--border-radius);
+}
+
+.limit-icon {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.limit-icon.lead {
+    background: #ff6b6b;
+}
+
+.limit-icon.mercury {
+    background: #4ecdc4;
+}
+
+.limit-icon.cadmium {
+    background: #45b7d1;
+}
+
+.limit-icon.arsenic {
+    background: #96ceb4;
+}
+
+.limit-metal {
+    flex-grow: 1;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.limit-value {
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--gray-color);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    color: #d1d5db;
+    margin-bottom: 2rem;
+}
+
+.empty-state h3 {
+    font-size: 1.8rem;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .header-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .table-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .samples-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+    
+    .limits-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Search functionality
+const searchInput = document.getElementById('searchInput');
+const tableBody = document.getElementById('samplesTableBody');
+const sampleCards = document.querySelectorAll('.sample-card');
+
+searchInput.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    
+    // Filter table rows
+    const tableRows = tableBody.querySelectorAll('.sample-row');
+    tableRows.forEach(row => {
+        const location = row.dataset.location.toLowerCase();
+        const date = row.dataset.date.toLowerCase();
+        const id = row.querySelector('.sample-id').textContent.toLowerCase();
+        
+        if (location.includes(searchTerm) || date.includes(searchTerm) || id.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+    
+    // Filter cards
+    sampleCards.forEach(card => {
+        const location = card.dataset.location.toLowerCase();
+        const date = card.dataset.date.toLowerCase();
+        
+        if (location.includes(searchTerm) || date.includes(searchTerm)) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+// View toggle functionality
+const toggleBtns = document.querySelectorAll('.toggle-btn');
+const tableView = document.getElementById('tableView');
+const gridView = document.getElementById('gridView');
+
+toggleBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+        const view = this.dataset.view;
+        
+        // Update active button
+        toggleBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Toggle views
+        if (view === 'table') {
+            tableView.classList.add('active');
+            gridView.classList.remove('active');
+        } else {
+            gridView.classList.add('active');
+            tableView.classList.remove('active');
+        }
+    });
+});
+
+// Share sample function
+function shareSample(sampleId) {
+    if (navigator.share) {
+        navigator.share({
+            title: `Water Sample #${sampleId}`,
+            text: `Check out this water quality sample analysis from HMPI System`,
+            url: window.location.origin + `/sample/${sampleId}/`
+        });
+    } else {
+        // Fallback: copy URL to clipboard
+        const url = `${window.location.origin}/sample/${sampleId}/`;
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Sample URL copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

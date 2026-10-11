@@ -1,0 +1,1377 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}Water Quality Analysis - HMPI System{% endblock %}
+
+{% block content %}
+<!-- Water Quality Hero Section -->
+<div class="water-quality-hero">
+    <div class="hero-background">
+        <div class="water-waves">
+            <div class="wave wave-1"></div>
+            <div class="wave wave-2"></div>
+            <div class="wave wave-3"></div>
+        </div>
+    </div>
+    <div class="hero-content">
+        <div class="hero-main">
+            <div class="quality-badge">
+                <i class="fas fa-tint"></i>
+                <span>Water Quality Analysis</span>
+            </div>
+            <h1 class="hero-title">
+                <span class="title-primary">Comprehensive Water</span>
+                <span class="title-secondary">Safety Assessment</span>
+            </h1>
+            <p class="hero-description">
+                Advanced water quality monitoring with real-time analysis of heavy metal contamination, 
+                pollution indexing, and safety recommendations for environmental protection.
+            </p>
+            <div class="hero-actions">
+                <a href="{% url 'add_sample' %}" class="hero-btn primary">
+                    <i class="fas fa-plus-circle"></i>
+                    Add New Sample
+                </a>
+                <a href="{% url 'sample_with_hpi_list' %}" class="hero-btn secondary">
+                    <i class="fas fa-chart-line"></i>
+                    View Analysis
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="quality-gauge-container">
+                <div class="main-quality-gauge">
+                    <div class="gauge-outer">
+                        <div class="gauge-inner">
+                            <div class="gauge-needle" style="
+    transform-origin: bottom center;
+    transform: translate(-50%, -80px) rotate({{ overall_quality_angle|default:'35' }}deg);
+"></div>
+                            <div class="gauge-center">
+                                <div class="quality-value">{{ overall_quality|default:'Good' }}</div>
+                                <div class="quality-label">Water Quality</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="gauge-scale">
+                        <span class="scale-mark excellent">Excellent</span>
+                        <span class="scale-mark good">Good</span>
+                        <span class="scale-mark fair">Fair</span>
+                        <span class="scale-mark poor">Poor</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Statistics -->
+<div class="stats-grid" style="margin-bottom: 2rem;">
+    <div class="stat-card">
+        <div class="stat-number" style="color: #22c55e;">{{ safe_samples_count|default:"0" }}</div>
+        <div class="stat-label">Safe Samples</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #ef4444;">{{ unsafe_samples_count|default:"0" }}</div>
+        <div class="stat-label">Unsafe Samples</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #667eea;">{{ total_samples|default:"0" }}</div>
+        <div class="stat-label">Total Samples</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number" style="color: #f59e0b;">{{ locations_monitored|default:"0" }}</div>
+        <div class="stat-label">Locations Monitored</div>
+    </div>
+</div>
+
+<!-- Water Quality Dashboard -->
+<div class="water-quality-dashboard">
+    <div class="dashboard-header">
+        <h2><i class="fas fa-flask"></i> Water Quality Overview</h2>
+        <div class="dashboard-controls">
+            <select class="control-select">
+                <option value="all">All Samples</option>
+                <option value="safe">Safe Only</option>
+                <option value="unsafe">Unsafe Only</option>
+            </select>
+            <button class="control-btn" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i>
+                Refresh
+            </button>
+        </div>
+    </div>
+    
+    <!-- Quality Metrics Grid -->
+    <div class="quality-metrics-grid">
+        <div class="metric-card drinkability">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-glass-water"></i>
+                </div>
+                <h3>Drinking Water Safety</h3>
+            </div>
+            <div class="metric-content">
+                <div class="safety-indicator safe">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ safe_percentage|default:"85" }}% Safe</span>
+                </div>
+                <div class="metric-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Safe for consumption:</span>
+                        <span class="detail-value safe">{{ safe_samples_count|default:"0" }} samples</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Requires treatment:</span>
+                        <span class="detail-value warning">{{ treatment_required|default:"0" }} samples</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Not safe:</span>
+                        <span class="detail-value danger">{{ unsafe_samples_count|default:"0" }} samples</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card contamination">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>Contamination Levels</h3>
+            </div>
+            <div class="metric-content">
+                <div class="contamination-chart">
+                    <div class="contamination-item">
+                        <div class="contamination-bar">
+                            <div class="bar-fill lead" style="width: {{ lead_contamination_percent|default:'20' }}%;"></div>
+                        </div>
+                        <div class="contamination-label">
+                            <span class="metal-name">Lead</span>
+                            <span class="contamination-value">{{ lead_avg|default:"0.005" }} mg/L</span>
+                        </div>
+                    </div>
+                    <div class="contamination-item">
+                        <div class="contamination-bar">
+                            <div class="bar-fill mercury" style="width: {{ mercury_contamination_percent|default:'15' }}%;"></div>
+                        </div>
+                        <div class="contamination-label">
+                            <span class="metal-name">Mercury</span>
+                            <span class="contamination-value">{{ mercury_avg|default:"0.003" }} mg/L</span>
+                        </div>
+                    </div>
+                    <div class="contamination-item">
+                        <div class="contamination-bar">
+                            <div class="bar-fill cadmium" style="width: {{ cadmium_contamination_percent|default:'10' }}%;"></div>
+                        </div>
+                        <div class="contamination-label">
+                            <span class="metal-name">Cadmium</span>
+                            <span class="contamination-value">{{ cadmium_avg|default:"0.001" }} mg/L</span>
+                        </div>
+                    </div>
+                    <div class="contamination-item">
+                        <div class="contamination-bar">
+                            <div class="bar-fill arsenic" style="width: {{ arsenic_contamination_percent|default:'25' }}%;"></div>
+                        </div>
+                        <div class="contamination-label">
+                            <span class="metal-name">Arsenic</span>
+                            <span class="contamination-value">{{ arsenic_avg|default:"0.008" }} mg/L</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card trends">
+            <div class="metric-header">
+                <div class="metric-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Quality Trends</h3>
+            </div>
+            <div class="metric-content">
+                <div class="trend-indicators">
+                    <div class="trend-item improving">
+                        <i class="fas fa-arrow-up"></i>
+                        <span class="trend-text">Overall quality improving</span>
+                        <span class="trend-value">+5.2% this month</span>
+                    </div>
+                    <div class="trend-item stable">
+                        <i class="fas fa-minus"></i>
+                        <span class="trend-text">Lead levels stable</span>
+                        <span class="trend-value">±0.1% variance</span>
+                    </div>
+                    <div class="trend-item declining">
+                        <i class="fas fa-arrow-down"></i>
+                        <span class="trend-text">Mercury slightly elevated</span>
+                        <span class="trend-value">+2.1% from baseline</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Samples Table -->
+    <div class="recent-samples-section">
+        <div class="section-header">
+            <h3><i class="fas fa-history"></i> Recent Water Quality Tests</h3>
+            <div class="section-controls">
+                <a href="{% url 'sample_list' %}" class="view-all-link">
+                    View All Samples <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="samples-table-container">
+            <table class="samples-table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-hashtag"></i> ID</th>
+                        <th><i class="fas fa-map-marker-alt"></i> Location</th>
+                        <th><i class="fas fa-calendar"></i> Date</th>
+                        <th><i class="fas fa-tint"></i> Quality Status</th>
+                        <th><i class="fas fa-calculator"></i> HPI Score</th>
+                        <th><i class="fas fa-shield-alt"></i> Safety</th>
+                        <th><i class="fas fa-tools"></i> Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sample in recent_samples %}
+                    <tr class="sample-row">
+                        <td class="sample-id">
+                            <span class="id-badge">#{{ sample.id }}</span>
+                        </td>
+                        <td class="sample-location">
+                            <div class="location-info">
+                                <i class="fas fa-map-pin"></i>
+                                <span>{{ sample.location }}</span>
+                            </div>
+                        </td>
+                        <td class="sample-date">
+                            <div class="date-info">
+                                <span class="date-main">{{ sample.date|date:"M d, Y" }}</span>
+                                <span class="date-time">{{ sample.date|date:"H:i" }}</span>
+                            </div>
+                        </td>
+                        <td class="quality-status">
+                            {% if sample.is_drinkable %}
+                                <div class="status-badge safe">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Safe</span>
+                                </div>
+                            {% else %}
+                                <div class="status-badge unsafe">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Unsafe</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="hpi-score">
+                            <div class="score-container">
+                                {% if sample.hpi_score %}
+                                    <span class="score-value {% if sample.hpi_score > 100 %}high{% elif sample.hpi_score > 50 %}medium{% else %}low{% endif %}">
+                                        {{ sample.hpi_score|floatformat:1 }}
+                                    </span>
+                                {% else %}
+                                    <span class="score-value pending">Pending</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="safety-level">
+                            {% if sample.is_drinkable %}
+                                <div class="safety-indicator safe">
+                                    <i class="fas fa-shield-check"></i>
+                                    <span>Drinkable</span>
+                                </div>
+                            {% else %}
+                                <div class="safety-indicator unsafe">
+                                    <i class="fas fa-shield-times"></i>
+                                    <span>Not Drinkable</span>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td class="sample-actions">
+                            <div class="action-buttons">
+                                <a href="{% url 'sample_detail' sample.id %}" class="action-btn view" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="action-btn analyze" onclick="analyzeSample({{ sample.id }})" title="Quick Analysis">
+                                    <i class="fas fa-flask"></i>
+                                </button>
+                                <button class="action-btn export" onclick="exportSample({{ sample.id }})" title="Export Data">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="no-samples">
+                            <div class="no-samples-content">
+                                <i class="fas fa-flask"></i>
+                                <p>No water quality samples found</p>
+                                <a href="{% url 'add_sample' %}" class="add-sample-btn">
+                                    <i class="fas fa-plus"></i>
+                                    Add First Sample
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="quick-actions-section">
+        <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        <div class="quick-actions-grid">
+            <a href="{% url 'add_sample' %}" class="quick-action-card">
+                <div class="action-icon">
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Add New Sample</h4>
+                    <p>Register a new water quality test</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'filtered_sample_list' %}" class="quick-action-card">
+                <div class="action-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Search & Filter</h4>
+                    <p>Find specific samples or data</p>
+                </div>
+            </a>
+            
+            <a href="{% url 'sample_with_hpi_list' %}" class="quick-action-card">
+                <div class="action-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="action-content">
+                    <h4>HPI Analysis</h4>
+                    <p>View pollution index calculations</p>
+                </div>
+            </a>
+            
+            <button class="quick-action-card" onclick="generateReport()">
+                <div class="action-icon">
+                    <i class="fas fa-file-pdf"></i>
+                </div>
+                <div class="action-content">
+                    <h4>Generate Report</h4>
+                    <p>Create comprehensive analysis report</p>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Water Quality Styles */
+:root {
+    --water-blue: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --water-green: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --water-orange: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --safe-color: #22c55e;
+    --unsafe-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+}
+
+.water-quality-hero {
+    position: relative;
+    background: var(--water-blue);
+    border-radius: 20px;
+    padding: 4rem 2rem;
+    margin-bottom: 3rem;
+    color: white;
+    overflow: hidden;
+    min-height: 500px;
+}
+
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.water-waves {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    width: 200%;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 100px;
+    animation: wave-animation 4s ease-in-out infinite;
+}
+
+.wave-1 {
+    left: -50%;
+    animation-delay: 0s;
+}
+
+.wave-2 {
+    left: -50%;
+    animation-delay: 1s;
+    opacity: 0.7;
+}
+
+.wave-3 {
+    left: -50%;
+    animation-delay: 2s;
+    opacity: 0.5;
+}
+
+@keyframes wave-animation {
+    0%, 100% {
+        transform: translateX(0px) translateY(0px);
+    }
+    25% {
+        transform: translateX(-25px) translateY(-10px);
+    }
+    50% {
+        transform: translateX(0px) translateY(-20px);
+    }
+    75% {
+        transform: translateX(25px) translateY(-10px);
+    }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3rem;
+}
+
+.quality-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.875rem;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+}
+
+.title-primary {
+    display: block;
+    background: linear-gradient(45deg, #fff, #e3f2fd);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.title-secondary {
+    display: block;
+    color: #ffd700;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+.hero-description {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    opacity: 0.9;
+    max-width: 600px;
+    margin-bottom: 2rem;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.hero-btn {
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+}
+
+.hero-btn.primary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.hero-btn.primary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+}
+
+.hero-btn.secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.hero-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-3px);
+}
+
+/* Quality Gauge */
+.quality-gauge-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-quality-gauge {
+    position: relative;
+}
+
+.gauge-outer {
+    width: 250px;
+    height: 250px;
+    background: conic-gradient(
+        from 180deg,
+        #22c55e 0deg 90deg,
+        #f59e0b 90deg 180deg,
+        #ef4444 180deg 270deg,
+        #dc2626 270deg 360deg
+    );
+    border-radius: 50%;
+    padding: 20px;
+    position: relative;
+}
+
+.gauge-inner {
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gauge-needle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 80px;
+    background: white;
+    transform-origin: bottom center;
+    transform: translate(-50%, -80px) rotate(45deg);
+    border-radius: 2px;
+    z-index: 10;
+}
+
+.gauge-center {
+    text-align: center;
+    z-index: 5;
+}
+
+.quality-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+
+.quality-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    opacity: 0.8;
+    text-transform: uppercase;
+}
+
+.gauge-scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Water Quality Dashboard */
+.water-quality-dashboard {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    padding: 3rem;
+    margin-bottom: 3rem;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #f3f4f6;
+}
+
+.dashboard-header h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dashboard-controls {
+    display: flex;
+    gap: 1rem;
+}
+
+.control-select {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-weight: 600;
+    background: white;
+}
+
+.control-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--water-blue);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Quality Metrics */
+.quality-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.metric-card {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 2rem;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    border-color: rgba(79, 172, 254, 0.3);
+    transform: translateY(-3px);
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.metric-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--water-blue);
+    color: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.metric-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* Safety Indicators */
+.safety-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.safety-indicator.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border: 2px solid rgba(34, 197, 94, 0.2);
+}
+
+.safety-indicator.unsafe {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+.metric-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: white;
+    border-radius: 8px;
+}
+
+.detail-value.safe { color: var(--safe-color); font-weight: 600; }
+.detail-value.warning { color: var(--warning-color); font-weight: 600; }
+.detail-value.danger { color: var(--unsafe-color); font-weight: 600; }
+
+/* Contamination Chart */
+.contamination-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.contamination-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.contamination-bar {
+    flex: 1;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 1s ease-in-out;
+}
+
+.bar-fill.lead { background: #ff6b6b; }
+.bar-fill.mercury { background: #4ecdc4; }
+.bar-fill.cadmium { background: #45b7d1; }
+.bar-fill.arsenic { background: #96ceb4; }
+
+.contamination-label {
+    display: flex;
+    flex-direction: column;
+    min-width: 100px;
+}
+
+.metal-name {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.contamination-value {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+/* Trend Indicators */
+.trend-indicators {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.trend-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: white;
+}
+
+.trend-item.improving {
+    border-left: 4px solid var(--safe-color);
+}
+
+.trend-item.stable {
+    border-left: 4px solid var(--warning-color);
+}
+
+.trend-item.declining {
+    border-left: 4px solid var(--unsafe-color);
+}
+
+.trend-item i {
+    width: 24px;
+    text-align: center;
+}
+
+.trend-item.improving i { color: var(--safe-color); }
+.trend-item.stable i { color: var(--warning-color); }
+.trend-item.declining i { color: var(--unsafe-color); }
+
+.trend-text {
+    flex: 1;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.trend-value {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+/* Recent Samples Table */
+.recent-samples-section {
+    margin-bottom: 3rem;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.view-all-link {
+    color: #4facfe;
+    text-decoration: none;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.view-all-link:hover {
+    transform: translateX(5px);
+}
+
+.samples-table-container {
+    background: #f9fafb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.samples-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.samples-table thead {
+    background: var(--water-blue);
+    color: white;
+}
+
+.samples-table th {
+    padding: 1.5rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.samples-table td {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.samples-table tbody tr:hover {
+    background: rgba(79, 172, 254, 0.05);
+}
+
+/* Table Cell Styles */
+.id-badge {
+    background: var(--water-blue);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.location-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.location-info i {
+    color: #ef4444;
+}
+
+.date-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.date-main {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.date-time {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.status-badge.safe {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.status-badge.unsafe {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.score-value {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.score-value.low {
+    background: rgba(34, 197, 94, 0.1);
+    color: #166534;
+}
+
+.score-value.medium {
+    background: rgba(245, 158, 11, 0.1);
+    color: #92400e;
+}
+
+.score-value.high {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+}
+
+.score-value.pending {
+    background: rgba(107, 114, 128, 0.1);
+    color: #374151;
+}
+
+.safety-indicator.safe {
+    color: var(--safe-color);
+}
+
+.safety-indicator.unsafe {
+    color: var(--unsafe-color);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.action-btn.view {
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563eb;
+}
+
+.action-btn.view:hover {
+    background: #2563eb;
+    color: white;
+}
+
+.action-btn.analyze {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.action-btn.analyze:hover {
+    background: #059669;
+    color: white;
+}
+
+.action-btn.export {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+
+.action-btn.export:hover {
+    background: #d97706;
+    color: white;
+}
+
+/* No Samples State */
+.no-samples-content {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6b7280;
+}
+
+.no-samples-content i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #d1d5db;
+}
+
+.add-sample-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--water-blue);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.add-sample-btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Quick Actions */
+.quick-actions-section h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.quick-action-card {
+    background: #f9fafb;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+}
+
+.quick-action-card:hover {
+    border-color: #4facfe;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.quick-action-card .action-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--water-blue);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.quick-action-card .action-content h4 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 0.5rem 0;
+}
+
+.quick-action-card .action-content p {
+    color: #6b7280;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2rem;
+    }
+    
+    .quality-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .water-quality-hero {
+        padding: 3rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .water-quality-dashboard {
+        padding: 2rem 1rem;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .samples-table-container {
+        overflow-x: auto;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .hero-btn {
+        justify-content: center;
+    }
+    
+    .gauge-outer {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .metric-card {
+        padding: 1.5rem;
+    }
+    
+    .quick-action-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+// Water Quality JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWaterQuality();
+    animateGauges();
+    updateContaminationBars();
+});
+
+function initializeWaterQuality() {
+    // Initialize control handlers
+    const controlSelect = document.querySelector('.control-select');
+    if (controlSelect) {
+        controlSelect.addEventListener('change', function() {
+            filterSamples(this.value);
+        });
+    }
+    
+    // Animate progress bars on load
+    setTimeout(() => {
+        updateContaminationBars();
+    }, 500);
+}
+
+function refreshData() {
+    const refreshBtn = document.querySelector('.control-btn');
+    const icon = refreshBtn.querySelector('i');
+    
+    icon.style.transform = 'rotate(360deg)';
+    
+    // Simulate data refresh
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+function filterSamples(filter) {
+    const rows = document.querySelectorAll('.sample-row');
+    
+    rows.forEach(row => {
+        const statusBadge = row.querySelector('.status-badge');
+        const isSafe = statusBadge && statusBadge.classList.contains('safe');
+        
+        switch(filter) {
+            case 'safe':
+                row.style.display = isSafe ? '' : 'none';
+                break;
+            case 'unsafe':
+                row.style.display = !isSafe ? '' : 'none';
+                break;
+            case 'all':
+            default:
+                row.style.display = '';
+                break;
+        }
+    });
+}
+
+function animateGauges() {
+    // Animate the main quality gauge
+    const needle = document.querySelector('.gauge-needle');
+    if (needle) {
+        needle.style.transition = 'transform 2s ease-in-out';
+    }
+}
+
+function updateContaminationBars() {
+    const bars = document.querySelectorAll('.bar-fill');
+    bars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 100);
+    });
+}
+
+function analyzeSample(sampleId) {
+    alert(`Starting analysis for sample #${sampleId}`);
+    // Implement sample analysis logic
+}
+
+function exportSample(sampleId) {
+    alert(`Exporting data for sample #${sampleId}`);
+    // Implement export logic
+}
+
+function generateReport() {
+    alert('Generating comprehensive water quality report...');
+    // Implement report generation logic
+}
+</script>
+{% endblock %}

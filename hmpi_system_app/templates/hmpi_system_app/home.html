@@ -1,0 +1,684 @@
+{% extends "hmpi_system_app/base.html" %}
+
+{% block title %}Dashboard - HMPI System{% endblock %}
+
+{% block content %}
+<div class="dashboard-hero">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-title">Heavy Metal Pollution Index</h1>
+            <h2 class="hero-subtitle">Advanced Water Quality Monitoring & Analysis Platform</h2>
+            <p class="hero-description">
+                Monitor, analyze, and assess heavy metal contamination in water sources with cutting-edge machine learning technology and comprehensive safety analysis.
+            </p>
+        </div>
+        <div class="hero-stats">
+            <div class="quick-stat">
+                <div class="stat-icon">
+                    <i class="fas fa-vial"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ total_samples|default:0 }}</div>
+                    <div class="stat-label">Total Samples</div>
+                </div>
+            </div>
+            <div class="quick-stat">
+                <div class="stat-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ locations_count|default:0 }}</div>
+                    <div class="stat-label">Locations</div>
+                </div>
+            </div>
+            <div class="quick-stat">
+                <div class="stat-icon alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number danger">{{ unsafe_samples|default:0 }}</div>
+                    <div class="stat-label">Unsafe Samples</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Dashboard -->
+<div class="dashboard-actions">
+    <h3 class="section-title">Quick Actions</h3>
+    <div class="action-grid">
+        <div class="action-card primary">
+            <div class="action-icon">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="action-content">
+                <h4>Add New Sample</h4>
+                <p>Record a new water quality sample with heavy metal concentrations</p>
+                <a href="{% url 'add_sample' %}" class="action-btn">Add Sample</a>
+            </div>
+        </div>
+        
+        <div class="action-card secondary">
+            <div class="action-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="action-content">
+                <h4>Bulk Import</h4>
+                <p>Upload multiple samples at once using CSV file format</p>
+                <a href="{% url 'upload_csv' %}" class="action-btn">Upload CSV</a>
+            </div>
+        </div>
+        
+        <div class="action-card success">
+            <div class="action-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div class="action-content">
+                <h4>AI Analysis</h4>
+                <p>Generate machine learning insights and predictive analytics</p>
+                <a href="{% url 'ml_analysis' %}" class="action-btn">Run Analysis</a>
+            </div>
+        </div>
+        
+        <div class="action-card warning">
+            <div class="action-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="action-content">
+                <h4>Safety Assessment</h4>
+                <p>Check water drinkability and get filtration recommendations</p>
+                <a href="{% url 'water_quality' %}" class="action-btn">Check Quality</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Metrics Overview -->
+<div class="metrics-overview">
+    <h3 class="section-title">System Overview</h3>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-header">
+                <h4>Heavy Metal Monitoring</h4>
+                <i class="fas fa-atom"></i>
+            </div>
+            <div class="metric-content">
+                <div class="metric-item">
+                    <span class="metric-name">Lead (Pb)</span>
+                    <span class="metric-limit">Limit: 0.01 mg/L</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-name">Mercury (Hg)</span>
+                    <span class="metric-limit">Limit: 0.006 mg/L</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-name">Cadmium (Cd)</span>
+                    <span class="metric-limit">Limit: 0.003 mg/L</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-name">Arsenic (As)</span>
+                    <span class="metric-limit">Limit: 0.01 mg/L</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-header">
+                <h4>Analysis Capabilities</h4>
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="metric-content">
+                <div class="capability-item">
+                    <i class="fas fa-calculator"></i>
+                    <span>Heavy Metal Pollution Index Calculation</span>
+                </div>
+                <div class="capability-item">
+                    <i class="fas fa-robot"></i>
+                    <span>Machine Learning Predictions</span>
+                </div>
+                <div class="capability-item">
+                    <i class="fas fa-map"></i>
+                    <span>Geographic Distribution Analysis</span>
+                </div>
+                <div class="capability-item">
+                    <i class="fas fa-filter"></i>
+                    <span>Water Treatment Recommendations</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-header">
+                <h4>Data Management</h4>
+                <i class="fas fa-database"></i>
+            </div>
+            <div class="metric-content">
+                <div class="data-feature">
+                    <i class="fas fa-file-csv"></i>
+                    <span>CSV Batch Import</span>
+                </div>
+                <div class="data-feature">
+                    <i class="fas fa-search"></i>
+                    <span>Advanced Filtering</span>
+                </div>
+                <div class="data-feature">
+                    <i class="fas fa-download"></i>
+                    <span>Export & Reporting</span>
+                </div>
+                <div class="data-feature">
+                    <i class="fas fa-history"></i>
+                    <span>Historical Tracking</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity Feed -->
+<div class="activity-feed">
+    <h3 class="section-title">System Features</h3>
+    <div class="feature-showcase">
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-microscope"></i>
+            </div>
+            <div class="feature-content">
+                <h4>Precision Analysis</h4>
+                <p>Accurate heavy metal detection and quantification using advanced analytical methods and WHO/EPA safety standards.</p>
+            </div>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-globe-americas"></i>
+            </div>
+            <div class="feature-content">
+                <h4>Geographic Mapping</h4>
+                <p>Visualize contamination patterns across different locations with interactive maps and spatial analysis tools.</p>
+            </div>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-heartbeat"></i>
+            </div>
+            <div class="feature-content">
+                <h4>Health Impact Assessment</h4>
+                <p>Evaluate potential health risks and provide actionable recommendations for water treatment and safety measures.</p>
+            </div>
+        </div>
+        
+        <div class="feature-item">
+            <div class="feature-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="feature-content">
+                <h4>Real-time Monitoring</h4>
+                <p>Continuous water quality tracking with trend analysis and automated alerts for contamination events.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="cta-section">
+    <div class="cta-content">
+        <h3>Ready to Start Monitoring?</h3>
+        <p>Begin by adding your first water sample or uploading existing data to see the power of HMPI analysis.</p>
+        <div class="cta-buttons">
+            <a href="{% url 'add_sample' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add First Sample
+            </a>
+            <a href="{% url 'sample_list' %}" class="btn btn-secondary">
+                <i class="fas fa-list"></i> View All Data
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Dashboard-specific styles */
+.dashboard-hero {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-radius: var(--border-radius-lg);
+    padding: 4rem 3rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+}
+
+.hero-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.hero-subtitle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+}
+
+.hero-description {
+    font-size: 1.1rem;
+    color: var(--gray);
+    line-height: 1.7;
+    max-width: 600px;
+}
+
+.hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    transition: var(--transition);
+}
+
+.quick-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.5rem;
+}
+
+.stat-icon.alert {
+    background: var(--danger-gradient);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1;
+}
+
+.stat-number.danger {
+    color: #dc2626;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.dashboard-actions {
+    margin-bottom: 4rem;
+}
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.action-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 2.5rem;
+    text-align: center;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.action-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.action-card.primary::before { background: var(--primary-gradient); }
+.action-card.secondary::before { background: var(--secondary-gradient); }
+.action-card.success::before { background: var(--success-gradient); }
+.action-card.warning::before { background: var(--warning-gradient); }
+
+.action-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.action-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--white);
+    background: var(--primary-gradient);
+}
+
+.action-card.secondary .action-icon { background: var(--secondary-gradient); }
+.action-card.success .action-icon { background: var(--success-gradient); }
+.action-card.warning .action-icon { background: var(--warning-gradient); }
+
+.action-content h4 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 1rem;
+}
+
+.action-content p {
+    color: var(--gray);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.action-btn {
+    background: var(--primary-gradient);
+    color: var(--white);
+    padding: 0.8rem 2rem;
+    border-radius: var(--border-radius-lg);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-block;
+}
+
+.action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    color: var(--white);
+    text-decoration: none;
+}
+
+.metrics-overview {
+    margin-bottom: 4rem;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.metric-card {
+    background: var(--white);
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    transition: var(--transition);
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.metric-header h4 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.metric-header i {
+    font-size: 1.5rem;
+    color: #667eea;
+}
+
+.metric-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.metric-item:last-child {
+    border-bottom: none;
+}
+
+.metric-name {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.metric-limit {
+    font-size: 0.9rem;
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.capability-item, .data-feature {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    color: var(--gray);
+}
+
+.capability-item i, .data-feature i {
+    color: #667eea;
+    width: 20px;
+}
+
+.activity-feed {
+    margin-bottom: 4rem;
+}
+
+.feature-showcase {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.feature-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 2rem;
+    background: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    transition: var(--transition);
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.feature-content h4 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 0.8rem;
+}
+
+.feature-content p {
+    color: var(--gray);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.cta-section {
+    background: var(--primary-gradient);
+    color: var(--white);
+    padding: 4rem 3rem;
+    border-radius: var(--border-radius-lg);
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.cta-content h3 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.cta-content p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 2rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    background: var(--white);
+    color: #667eea;
+}
+
+.btn-primary:hover {
+    background: var(--light-gray);
+    color: #667eea;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+    .hero-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+    
+    .hero-title {
+        font-size: 2.8rem;
+    }
+    
+    .hero-stats {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .quick-stat {
+        flex: 1;
+        min-width: 200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-hero {
+        padding: 2rem 1.5rem;
+    }
+    
+    .hero-title {
+        font-size: 2.2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.2rem;
+    }
+    
+    .hero-stats {
+        flex-direction: column;
+    }
+    
+    .action-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .feature-showcase {
+        grid-template-columns: 1fr;
+    }
+    
+    .feature-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+{% endblock %}
